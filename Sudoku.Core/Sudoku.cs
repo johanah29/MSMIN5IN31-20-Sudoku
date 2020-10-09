@@ -33,6 +33,16 @@ namespace Sudoku.Core
         public List<int> Cells { get; set; } = Enumerable.Repeat(0, 81).ToList();
 
 
+        public int GetCell(int x, int y)
+        {
+            return Cells[(9 * x) + y];
+        }
+
+        public void SetCell(int x, int y, int value)
+        {
+            Cells[(9 * x) + y] = value;
+        }
+
         /// <summary>
         /// Displays a Sudoku in an easy-to-read format
         /// </summary>
@@ -145,15 +155,7 @@ namespace Sudoku.Core
 
 
 
-        public int GetCell(int x, int y)
-        {
-            return Cells[(9 * x) + y];
-        }
-
-        public void SetCell(int x, int y, int value)
-        {
-            Cells[(9 * x) + y] = value;
-        }
+       
 
 
         /// <summary>
