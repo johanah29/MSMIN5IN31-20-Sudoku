@@ -4,4 +4,18 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Sudoku.Core\Sudoku.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="external\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="SudokuSolver">
+      <HintPath>external\SudokuSolver.exe</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
