@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Loader;
 using System.Text;
 
 namespace Sudoku.Core
@@ -229,7 +231,47 @@ namespace Sudoku.Core
 
         public object Clone()
         {
-            return new  Sudoku(this.Cells);
+            return CloneSudoku();
         }
+
+        public Core.Sudoku CloneSudoku()
+        {
+            return new Sudoku(new List<int>(this.Cells));
+        }
+
+
+        public static IList<ISudokuSolver> GetSolvers()
+        {
+            var solvers = new List<ISudokuSolver>();
+
+            foreach (var file in Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory))
+            {
+                if (file.EndsWith("dll") && !(Path.GetFileName(file).StartsWith("libz3")))
+                {
+                    try
+                    {
+                        var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
+                        foreach (var type in assembly.GetTypes())
+                        {
+                            if (typeof(ISudokuSolver).IsAssignableFrom(type) && !(typeof(ISudokuSolver) == type))
+                            {
+                                var solver = (ISudokuSolver)Activator.CreateInstance(type);
+                                solvers.Add(solver);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e);
+                    }
+
+                }
+
+            }
+
+            return solvers;
+        }
+
+
     }
 }
