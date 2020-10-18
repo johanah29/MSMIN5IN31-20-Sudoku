@@ -32,7 +32,6 @@ namespace Sudoku.Core
         // The List property makes it easier to manipulate cells,
         public List<int> Cells { get; set; } = Enumerable.Repeat(0, 81).ToList();
 
-
         public int GetCell(int x, int y)
         {
             return Cells[(9 * x) + y];
@@ -152,10 +151,6 @@ namespace Sudoku.Core
             return res.ToArray();
         }
 
-
-
-
-       
 
 
         /// <summary>
