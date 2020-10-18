@@ -25,16 +25,24 @@ namespace Sudoku.techniquesHumaines
         public Puzzle transformationToPuzzle(Core.Sudoku s)
         {
             int line = -1;
-            int[][] grid = new int[9][];
+            int[][] grid = new int[9][]{ new int[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                    new int[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                    new int[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                    new int[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                    new int[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                    new int[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                    new int[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                    new int[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+                    new int[]{ 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
             for (int i = 0; i<s.Cells.Count; i++)
             {
-                if(i%9 == 0)
+                if (i%9 == 0)
                 {
                     line++;
                 }
-               
+                //grid[0][0] = 2;
                 grid[line][i % 9] = s.GetCell(0, i);
-                Console.WriteLine(grid[line][i % 9]);
+                //Console.WriteLine(grid[line][i % 9]);
             }
             Puzzle puzzle = new Puzzle(grid, true);
             return puzzle;
@@ -56,7 +64,9 @@ namespace Sudoku.techniquesHumaines
 
         public Core.Sudoku Solve(Core.Sudoku s)
         {
+            Console.WriteLine(s.GetType());
             Puzzle puzzle = transformationToPuzzle(s);
+            puzzle.RefreshCandidates();
             bool solved; // If this is true after a segment, the puzzle is solved and we can break
             do
             {
