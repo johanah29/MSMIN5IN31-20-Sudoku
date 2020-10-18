@@ -1,242 +1,158 @@
-﻿using Microsoft.Z3;
+﻿using Sudoku.Core;
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 
+using Microsoft.Z3;
+using System.Security.Cryptography;
 
 namespace sudoku.Z3
 {
 
     public class Z3Solver : ISudokuSolver
     {
+        static Expr[,] SudokuExample(Context ctx, int[,] instance)
+        {
+
+            // sudoku instance, we use '0' for empty cells
+            /* int[,] instance = {{0,0,0,0,9,4,0,3,0},
+                               {0,0,0,5,1,0,0,0,7},
+                               {0,8,9,0,0,0,0,4,0},
+                               {0,0,0,0,0,0,2,0,8},
+                               {0,6,0,2,0,1,0,5,0},
+                               {1,0,2,0,0,0,0,0,0},
+                               {0,7,0,0,0,0,5,2,0},
+                               {9,0,0,0,6,5,0,0,0},
+                               {0,4,0,9,7,0,0,0,0}};
+            */
+
+            // Console.WriteLine("SudokuExample");
+
+            // 9x9 matrix of integer variables
+            IntExpr[][] X = new IntExpr[9][];
+            for (uint i = 0; i < 9; i++)
+            {
+                X[i] = new IntExpr[9];
+                for (uint j = 0; j < 9; j++)
+                    X[i][j] = (IntExpr)ctx.MkConst(ctx.MkSymbol("x_" + (i + 1) + "_" + (j + 1)), ctx.IntSort);
+            }
+
+            // each cell contains a value in {1, ..., 9}
+            Expr[][] cells_c = new Expr[9][];
+            for (uint i = 0; i < 9; i++)
+            {
+                cells_c[i] = new BoolExpr[9];
+                for (uint j = 0; j < 9; j++)
+                    cells_c[i][j] = ctx.MkAnd(ctx.MkLe(ctx.MkInt(1), X[i][j]),
+                                              ctx.MkLe(X[i][j], ctx.MkInt(9)));
+            }
+
+            // each row contains a digit at most once
+            BoolExpr[] rows_c = new BoolExpr[9];
+            for (uint i = 0; i < 9; i++)
+                rows_c[i] = ctx.MkDistinct(X[i]);
+
+            // each column contains a digit at most once
+            BoolExpr[] cols_c = new BoolExpr[9];
+            for (uint j = 0; j < 9; j++)
+            {
+                IntExpr[] column = new IntExpr[9];
+                for (uint i = 0; i < 9; i++)
+                    column[i] = X[i][j];
+
+                cols_c[j] = ctx.MkDistinct(column);
+            }
+
+            // each 3x3 square contains a digit at most once
+            BoolExpr[][] sq_c = new BoolExpr[3][];
+            for (uint i0 = 0; i0 < 3; i0++)
+            {
+                sq_c[i0] = new BoolExpr[3];
+                for (uint j0 = 0; j0 < 3; j0++)
+                {
+                    IntExpr[] square = new IntExpr[9];
+                    for (uint i = 0; i < 3; i++)
+                        for (uint j = 0; j < 3; j++)
+                            square[3 * i + j] = X[3 * i0 + i][3 * j0 + j];
+                    sq_c[i0][j0] = ctx.MkDistinct(square);
+                }
+            }
+
+            BoolExpr sudoku_c = ctx.MkTrue();
+            foreach (BoolExpr[] t in cells_c)
+                sudoku_c = ctx.MkAnd(ctx.MkAnd(t), sudoku_c);
+            sudoku_c = ctx.MkAnd(ctx.MkAnd(rows_c), sudoku_c);
+            sudoku_c = ctx.MkAnd(ctx.MkAnd(cols_c), sudoku_c);
+            foreach (BoolExpr[] t in sq_c)
+                sudoku_c = ctx.MkAnd(ctx.MkAnd(t), sudoku_c);
+
+
+            BoolExpr instance_c = ctx.MkTrue();
+            for (uint i = 0; i < 9; i++)
+                for (uint j = 0; j < 9; j++)
+                    instance_c = ctx.MkAnd(instance_c,
+                        (BoolExpr)
+                        ctx.MkITE(ctx.MkEq(ctx.MkInt(instance[i, j]), ctx.MkInt(0)),
+                                    ctx.MkTrue(),
+                                    ctx.MkEq(X[i][j], ctx.MkInt(instance[i, j]))));
+
+            Solver s = ctx.MkSolver();
+            s.Assert(sudoku_c);
+            s.Assert(instance_c);
+
+            if (s.Check() == Status.SATISFIABLE)
+            {
+                Model m = s.Model;
+                Expr[,] R = new Expr[9, 9];
+                for (uint i = 0; i < 9; i++)
+                    for (uint j = 0; j < 9; j++)
+                        R[i, j] = m.Evaluate(X[i][j]);
+                // Console.WriteLine("Sudoku solution:");
+                /*  for (uint i = 0; i < 9; i++)
+                  {
+                      for (uint j = 0; j < 9; j++)
+                          Console.Write(" " + R[i, j]);
+                      Console.WriteLine();
+                  }
+                */
+
+                return R;
+
+
+            }
+            else
+            {
+                Console.WriteLine("Failed to solve sudoku");
+                //  throw new Exception();
+                return new Expr[9, 9];
+            }
+        }
+
         public Sudoku.Core.Sudoku Solve(Sudoku.Core.Sudoku s)
         {
-            static void SudokuExample(Context ctx)
+
+            int[,] instance = new int[9, 9];
+
+            for (int i = 0; i < 9; i++)
             {
-
-
-
-            private static readonly int[] Indices = Enumerable.Range(0, 9).ToArray();
-
-            // The List property makes it easier to manipulate cells,
-            public List<int> Cells { get; set; } = Enumerable.Repeat(0, 81).ToList();
-
-            /// <summary>
-            /// Creates a Z3 theorem to solve the sudoku, adding the general constraints, and the mask constraints for this particular Sudoku
-            /// </summary>
-            /// <param name="context">The linq to Z3 context wrapping Z3</param>
-            /// <returns>a theorem with all constraints compounded</returns>
-            public Theorem<SudokuAsArray> CreateTheorem(Z3Context context)
-            {
-                var toReturn = Create(context);
-                for (int i = 0; i < 81; i++)
+                for (int j = 0; j < 9; j++)
                 {
-                    if (Cells[i] != 0)
-                    {
-                        var idx = i;
-                        var cellValue = Cells[i];
-                        toReturn = toReturn.Where(sudoku => sudoku.Cells[idx] == cellValue);
-                    }
+                    instance[i, j] = s.GetCell(i, j);
                 }
-
-                return toReturn;
-
             }
 
+            Expr[,] R = SudokuExample(new Context(), instance);
 
-            /// <summary>
-            /// Creates a Z3-capable theorem to solve a Sudoku
-            /// </summary>
-            /// <param name="context">The wrapping Z3 context used to interpret c# Lambda into Z3 constraints</param>
-            /// <returns>A typed theorem to be further filtered with additional contraints</returns>
-            public static Theorem<SudokuAsArray> Create(Z3Context context)
+            String list = "";
+
+            for (int i = 0; i < 9; i++)
             {
-
-                var sudokuTheorem = context.NewTheorem<SudokuAsArray>();
-
-                // Cells have values between 1 and 9
-                for (int i = 0; i < 9; i++)
+                for (int j = 0; j < 9; j++)
                 {
-                    for (int j = 0; j < 9; j++)
-                    {
-                        //To avoid side effects with lambdas, we copy indices to local variables
-                        var i1 = i;
-                        var j1 = j;
-                        sudokuTheorem = sudokuTheorem.Where(sudoku => (sudoku.Cells[i1 * 9 + j1] > 0 && sudoku.Cells[i1 * 9 + j1] < 10));
-                    }
+                    list += R[i, j];
                 }
-
-                // Rows must have distinct digits
-                for (int r = 0; r < 9; r++)
-                {
-                    //Again we avoid Lambda closure side effects
-                    var r1 = r;
-                    sudokuTheorem = sudokuTheorem.Where(t => Z3Methods.Distinct(Indices.Select(j => t.Cells[r1 * 9 + j]).ToArray()));
-
-                }
-
-                // Columns must have distinct digits
-                for (int c = 0; c < 9; c++)
-                {
-                    //Preventing closure side effects
-                    var c1 = c;
-                    sudokuTheorem = sudokuTheorem.Where(t => Z3Methods.Distinct(Indices.Select(i => t.Cells[i * 9 + c1]).ToArray()));
-                }
-
-                // Boxes must have distinct digits
-                for (int b = 0; b < 9; b++)
-                {
-                    //On évite les effets de bords par closure
-                    var b1 = b;
-                    // We retrieve to top left cell for all boxes, using integer division and remainders.
-                    var iStart = b1 / 3;
-                    var jStart = b1 % 3;
-                    var indexStart = iStart * 3 * 9 + jStart * 3;
-                    sudokuTheorem = sudokuTheorem.Where(t => Z3Methods.Distinct(new int[]
-                          {
-                     t.Cells[indexStart ],
-                     t.Cells[indexStart+1],
-                     t.Cells[indexStart+2],
-                     t.Cells[indexStart+9],
-                     t.Cells[indexStart+10],
-                     t.Cells[indexStart+11],
-                     t.Cells[indexStart+18],
-                     t.Cells[indexStart+19],
-                     t.Cells[indexStart+20],
-                          }
-                       )
-                    );
-                }
-
-                return sudokuTheorem;
             }
-
-
-            /// <summary>
-            /// Displays a Sudoku in an easy-to-read format
-            /// </summary>
-            /// <returns></returns>
-            public override string ToString()
-            {
-                var lineSep = new string('-', 31);
-                var blankSep = new string(' ', 8);
-
-                var output = new StringBuilder();
-                output.Append(lineSep);
-                output.AppendLine();
-
-                for (int row = 1; row <= 9; row++)
-                {
-                    output.Append("| ");
-                    for (int column = 1; column <= 9; column++)
-                    {
-
-                        var value = Cells[(row - 1) * 9 + (column - 1)];
-
-                        output.Append(value);
-                        if (column % 3 == 0)
-                        {
-                            output.Append(" | ");
-                        }
-                        else
-                        {
-                            output.Append("  ");
-                        }
-                    }
-
-                    output.AppendLine();
-                    if (row % 3 == 0)
-                    {
-                        output.Append(lineSep);
-                    }
-                    else
-                    {
-                        output.Append("| ");
-                        for (int i = 0; i < 3; i++)
-                        {
-                            output.Append(blankSep);
-                            output.Append("| ");
-                        }
-                    }
-                    output.AppendLine();
-                }
-
-                return output.ToString();
-            }
-
-            /// <summary>
-            /// Parses a single Sudoku
-            /// </summary>
-            /// <param name="sudokuAsString">the string representing the sudoku</param>
-            /// <returns>the parsed sudoku</returns>
-            public static SudokuAsArray Parse(string sudokuAsString)
-            {
-                return ParseMulti(new[] { sudokuAsString })[0];
-            }
-
-            /// <summary>
-            /// Parses a file with one or several sudokus
-            /// </summary>
-            /// <param name="fileName"></param>
-            /// <returns>the list of parsed Sudokus</returns>
-            public static List<SudokuAsArray> ParseFile(string fileName)
-            {
-                return ParseMulti(File.ReadAllLines(fileName));
-            }
-
-            /// <summary>
-            /// Parses a list of lines into a list of sudoku, accounting for most cases usually encountered
-            /// </summary>
-            /// <param name="lines">the lines of string to parse</param>
-            /// <returns>the list of parsed Sudokus</returns>
-            public static List<SudokuAsArray> ParseMulti(string[] lines)
-            {
-                var toReturn = new List<SudokuAsArray>();
-                var cells = new List<int>(81);
-                foreach (var line in lines)
-                {
-                    if (line.Length > 0)
-                    {
-                        if (char.IsDigit(line[0]) || line[0] == '.' || line[0] == 'X' || line[0] == '-')
-                        {
-                            foreach (char c in line)
-                            {
-                                int? cellToAdd = null;
-                                if (char.IsDigit(c))
-                                {
-                                    var cell = (int)Char.GetNumericValue(c);
-                                    cellToAdd = cell;
-                                }
-                                else
-                                {
-                                    if (c == '.' || c == 'X' || c == '-')
-                                    {
-                                        cellToAdd = 0;
-                                    }
-                                }
-
-                                if (cellToAdd.HasValue)
-                                {
-                                    cells.Add(cellToAdd.Value);
-                                    if (cells.Count == 81)
-                                    {
-                                        toReturn.Add(new SudokuAsArray() { Cells = new List<int>(cells) });
-                                        cells.Clear();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                return toReturn;
-            }
-
+            return Sudoku.Core.Sudoku.Parse(list);
         }
-    }
-
-}
     }
 }

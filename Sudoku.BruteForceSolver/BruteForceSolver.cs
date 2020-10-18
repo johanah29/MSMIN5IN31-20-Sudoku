@@ -59,7 +59,6 @@ namespace Sudoku.BruteForceSolver
             if (s.GetCell(i, j) != 0)
                 return CheckAndSet(s, position + 1);
 
-
             // énumération des valeurs possibles
             for (int k = 1; k <= 9; k++)
             {
@@ -77,7 +76,6 @@ namespace Sudoku.BruteForceSolver
             s.SetCell(i, j, 0);
             // Puis on retourne false :(
             return false;
-
 
         }
 

@@ -6,8 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Sudoku.BruteForceSolver\Sudoku.BruteForceSolver.csproj" />
     <ProjectReference Include="..\Sudoku.Core\Sudoku.Core.csproj" />
+    <ProjectReference Include="..\sudoku.Z3\sudoku.Z3.csproj" />
   </ItemGroup>
 
 </Project>
