@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Loader;
 using System.Text;
 
 namespace Sudoku.Core
@@ -32,6 +34,15 @@ namespace Sudoku.Core
         // The List property makes it easier to manipulate cells,
         public List<int> Cells { get; set; } = Enumerable.Repeat(0, 81).ToList();
 
+        public int GetCell(int x, int y)
+        {
+            return Cells[(9 * x) + y];
+        }
+
+        public void SetCell(int x, int y, int value)
+        {
+            Cells[(9 * x) + y] = value;
+        }
 
         /// <summary>
         /// Displays a Sudoku in an easy-to-read format
@@ -144,18 +155,6 @@ namespace Sudoku.Core
 
 
 
-
-        public int GetCell(int x, int y)
-        {
-            return Cells[(9 * x) + y];
-        }
-
-        public void SetCell(int x, int y, int value)
-        {
-            Cells[(9 * x) + y] = value;
-        }
-
-
         /// <summary>
         /// Parses a single Sudoku
         /// </summary>
@@ -227,7 +226,47 @@ namespace Sudoku.Core
 
         public object Clone()
         {
-            return new  Sudoku(this.Cells);
+            return CloneSudoku();
         }
+
+        public Core.Sudoku CloneSudoku()
+        {
+            return new Sudoku(new List<int>(this.Cells));
+        }
+
+
+        public static IList<ISudokuSolver> GetSolvers()
+        {
+            var solvers = new List<ISudokuSolver>();
+
+            foreach (var file in Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory))
+            {
+                if (file.EndsWith("dll") && !(Path.GetFileName(file).StartsWith("libz3")))
+                {
+                    try
+                    {
+                        var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
+                        foreach (var type in assembly.GetTypes())
+                        {
+                            if (typeof(ISudokuSolver).IsAssignableFrom(type) && !(typeof(ISudokuSolver) == type))
+                            {
+                                var solver = (ISudokuSolver)Activator.CreateInstance(type);
+                                solvers.Add(solver);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e);
+                    }
+
+                }
+
+            }
+
+            return solvers;
+        }
+
+
     }
 }
