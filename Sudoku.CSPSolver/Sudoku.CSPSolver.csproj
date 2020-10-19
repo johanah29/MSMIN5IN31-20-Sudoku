@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0-rc.2.20475.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sudoku.Core\Sudoku.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="aima-core">
+      <HintPath>external\AIMA\aima-core.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.OpenJDK.Core">
+      <HintPath>external\IKVM\IKVM.OpenJDK.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="IKVM.Runtime">
+      <HintPath>external\IKVM\IKVM.Runtime.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
