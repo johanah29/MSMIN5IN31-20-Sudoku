@@ -1,13 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="Current">
+
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <FileUpgradeFlags>
-    </FileUpgradeFlags>
-    <UpgradeBackupLocation>
-    </UpgradeBackupLocation>
-    <OldToolsVersion>2.0</OldToolsVersion>
   </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Sudoku.Core\Sudoku.Core.csproj" />
   </ItemGroup>
+
 </Project>
