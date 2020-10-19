@@ -1,9 +1,5 @@
 ﻿using System;
-using GeneticSharp.Extensions.Sudoku;
-using GeneticSharp.Extensions.UnitTests.Sudoku;
 using Sudoku.Core;
-using Sudoku = Sudoku.Core.Sudoku;
-
 namespace Sudoku.GeneticAlgorithmSolver
 {
     public class GeneticAlgorithmSolver: ISudokuSolver
@@ -11,14 +7,29 @@ namespace Sudoku.GeneticAlgorithmSolver
         public Core.Sudoku Solve(Core.Sudoku s)
         {
             
-            var sudoku =  (Core.Sudoku)s.Clone();
-            var stringsolution = sudoku.ToString();
-            Console.WriteLine(sudoku);
-            var sudokuboard =SudokuTestHelper.CreateBoard(stringsolution);
-            var chromosome = new SudokuCellsChromosome(sudokuboard);
-            //var solution = SudokuTestHelper.Eval()
+            var sudokuTab =  (Core.Sudoku)s.Clone();
+            Console.WriteLine("Begin solving Sudoku using combinatorial evolution");
+            Console.WriteLine("The Sudoku is:");
 
-            return sudoku;
+            var sudoku = Sudoku.Easy;
+            Console.WriteLine(sudoku.ToString());
+
+            const int numOrganisms = 200;
+            const int maxEpochs = 5000;
+            const int maxRestarts = 40;
+            Console.WriteLine($"Setting numOrganisms: {numOrganisms}");
+            Console.WriteLine($"Setting maxEpochs: {maxEpochs}");
+            Console.WriteLine($"Setting maxRestarts: {maxRestarts}");
+
+            var solver = new SudokuSolver();
+            var solvedSudoku = solver.Solve(sudoku, numOrganisms, maxEpochs, maxRestarts);
+
+            Console.WriteLine("Best solution found:");
+            Console.WriteLine(solvedSudoku.ToString());
+            Console.WriteLine(solvedSudoku.Error == 0 ? "Success" : "Did not find optimal solution");
+            Console.WriteLine("End Sudoku using combinatorial evolution");
+
+            return sudokuTab;
             
         }
     }

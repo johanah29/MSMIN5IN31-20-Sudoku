@@ -95,6 +95,27 @@ namespace Sudoku.Core
             return output.ToString();
         }
 
+        /// <summary>
+        /// Displays a Sudoku in an easy-to-read format
+        /// </summary>
+        /// <returns></returns>
+        public string ToStringGenetic()
+        {
+            var output = new StringBuilder();
+
+            for (int row = 1; row <= 9; row++)
+            {
+                for (int column = 1; column <= 9; column++)
+                {
+
+                    var value = Cells[(row - 1) * 9 + (column - 1)];
+
+                    output.Append(value);
+                }
+            }
+            return output.ToString();
+        }
+
 
         public int[] GetPossibilities(int x, int y)
         {
