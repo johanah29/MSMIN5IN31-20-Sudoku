@@ -41,7 +41,7 @@ namespace Sudoku.Benchmark
 
                     string filePath = $@"..\..\..\..\Samples\{fileName}";
                     var sudokus = Core.Sudoku.ParseFile(filePath);
-
+               
                     Console.WriteLine("Choose a solver:");
                     for (int i = 0; i < solvers.Count(); i++)
                     {

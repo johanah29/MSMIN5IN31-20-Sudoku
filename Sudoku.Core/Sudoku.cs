@@ -231,5 +231,6 @@ namespace Sudoku.Core
         {
             return new  Sudoku(this.Cells);
         }
+
     }
 }
