@@ -5,6 +5,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.Loader;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Running;
 using Sudoku.Core;
 
 namespace Sudoku.Benchmark
@@ -15,53 +17,30 @@ namespace Sudoku.Benchmark
         {
             try
             {
-                var solvers = GetSolvers();
+               
 
                 Console.WriteLine("Benchmarking Sudoku Solvers");
 
                 while (true)
                 {
-                    Console.WriteLine("Select difficulty: 1-Easy, 2-Medium, 3-Hard");
-                    var strDiff = Console.ReadLine();
-                    int intDiff;
-                    int.TryParse(strDiff, out intDiff);
-                    string fileName;
-                    switch (intDiff)
+                    Console.WriteLine("Select Mode: 1-Single Solver Test, 2-Complete Benchmark");
+                    var strMode = Console.ReadLine();
+                    int intMode;
+                    int.TryParse(strMode, out intMode);
+                    switch (intMode)
                     {
                         case 1:
-                            fileName = "Sudoku_Easy50.txt";
-                            break;
-                        case 2:
-                            fileName = "Sudoku_hardest.txt";
+                            SingleSolverTest();
                             break;
                         default:
-                            fileName = "Sudoku_top95.txt";
+                            var summary = BenchmarkRunner.Run<BenchmarkSolvers>();
                             break;
+                        
                     }
 
-                    string filePath = $@"..\..\..\..\Samples\{fileName}";
-                    var sudokus = Core.Sudoku.ParseFile(filePath);
 
-                    Console.WriteLine("Choose a solver:");
-                    for (int i = 0; i < solvers.Count(); i++)
-                    {
-                        Console.WriteLine($"{(i + 1).ToString(CultureInfo.InvariantCulture)} - {solvers[i].GetType().FullName}");
-                    }
-                    var strSolver = Console.ReadLine();
-                    int intSolver;
-                    int.TryParse(strSolver, out intSolver);
-                    var solver = solvers[intSolver - 1];
-                    var targetSudoku = sudokus[0];
-                    Console.WriteLine("Sudoku à résoudre:");
-                    Console.WriteLine(targetSudoku.ToString());
-                    var sw = Stopwatch.StartNew();
 
-                    var solution = solver.Solve(targetSudoku);
-
-                    var elapsed = sw.Elapsed;
-                    Console.WriteLine("solution:");
-                    Console.WriteLine(solution.ToString());
-                    Console.WriteLine($"Time to solution: {elapsed.TotalMilliseconds} ms");
+                   
                 }
               
             }
@@ -74,42 +53,59 @@ namespace Sudoku.Benchmark
         }
 
 
-
-        private static IList<ISudokuSolver> GetSolvers()
+        private static void SingleSolverTest()
         {
-            var solvers = new List<ISudokuSolver>();
-
-            foreach (var file in Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory))
+            var solvers = Core.Sudoku.GetSolvers();
+            Console.WriteLine("Select difficulty: 1-Easy, 2-Medium, 3-Hard");
+            var strDiff = Console.ReadLine();
+            int intDiff;
+            int.TryParse(strDiff, out intDiff);
+            SudokuDifficulty difficulty;
+            switch (intDiff)
             {
-                if (file.EndsWith("dll") && !(Path.GetFileName(file).StartsWith("libz3")))
-                {
-                    try
-                    {
-                        var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
-                        foreach (var type in assembly.GetTypes())
-                        {
-                            if (typeof(ISudokuSolver).IsAssignableFrom(type) && !(typeof(ISudokuSolver) == type))
-                            {
-                                var solver = (ISudokuSolver)Activator.CreateInstance(type);
-                                solvers.Add(solver);
-                            }
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                    
-                }
-
-               
-
+                case 1:
+                    difficulty = SudokuDifficulty.Easy;
+                    break;
+                case 2:
+                    difficulty = SudokuDifficulty.Medium;
+                    break;
+                default:
+                    difficulty = SudokuDifficulty.Hard;
+                    break;
             }
 
-            return solvers;
+            var sudokus = SudokuHelper.GetSudokus(difficulty);
+
+            Console.WriteLine($"Choose a puzzle index between 1 and {sudokus.Count}");
+            var strIdx = Console.ReadLine();
+            int intIdx;
+            int.TryParse(strIdx, out intIdx);
+            var targetSudoku = sudokus[intIdx-1];
+
+            Console.WriteLine("Chosen Puzzle:");
+            Console.WriteLine(targetSudoku.ToString());
+
+            Console.WriteLine("Choose a solver:");
+            for (int i = 0; i < solvers.Count(); i++)
+            {
+                Console.WriteLine($"{(i + 1).ToString(CultureInfo.InvariantCulture)} - {solvers[i].GetType().FullName}");
+            }
+            var strSolver = Console.ReadLine();
+            int intSolver;
+            int.TryParse(strSolver, out intSolver);
+            var solver = solvers[intSolver - 1];
+           
+           
+            var sw = Stopwatch.StartNew();
+
+            var solution = solver.Solve(targetSudoku);
+
+            var elapsed = sw.Elapsed;
+            Console.WriteLine("solution:");
+            Console.WriteLine(solution.ToString());
+            Console.WriteLine($"Time to solution: {elapsed.TotalMilliseconds} ms");
+
         }
-
-
 
     }
 }
