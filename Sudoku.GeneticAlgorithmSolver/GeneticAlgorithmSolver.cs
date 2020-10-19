@@ -1,5 +1,7 @@
 ﻿using System;
 using Sudoku.Core;
+using System.Collections.Generic;
+
 namespace Sudoku.GeneticAlgorithmSolver
 {
     public class GeneticAlgorithmSolver: ISudokuSolver
@@ -11,8 +13,7 @@ namespace Sudoku.GeneticAlgorithmSolver
             Console.WriteLine("Begin solving Sudoku using combinatorial evolution");
             Console.WriteLine("The Sudoku is:");
 
-            var sudoku = Sudoku.Easy;
-            Console.WriteLine(sudoku.ToString());
+            var sudoku = Sudoku.Convert(sudokuTab);
 
             const int numOrganisms = 200;
             const int maxEpochs = 5000;
@@ -24,13 +25,29 @@ namespace Sudoku.GeneticAlgorithmSolver
             var solver = new SudokuSolver();
             var solvedSudoku = solver.Solve(sudoku, numOrganisms, maxEpochs, maxRestarts);
 
-            Console.WriteLine("Best solution found:");
-            Console.WriteLine(solvedSudoku.ToString());
             Console.WriteLine(solvedSudoku.Error == 0 ? "Success" : "Did not find optimal solution");
             Console.WriteLine("End Sudoku using combinatorial evolution");
+            var solution = ConvertSolution(solvedSudoku);
 
-            return sudokuTab;
+            return solution;
             
         }
+        public Core.Sudoku ConvertSolution(Sudoku sudoku)
+        {
+
+            var list = new List<int> { };
+            for (int row = 1; row <= 9; row++)
+            {
+                for (int column = 1; column <= 9; column++)
+                {
+                    list.Add(sudoku.CellValues[row - 1, column - 1]);
+                }
+            }
+            var output = new Core.Sudoku(list);
+            return output;
+
+        }
+
     }
+
 }
