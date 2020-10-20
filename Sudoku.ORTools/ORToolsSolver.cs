@@ -14,6 +14,7 @@ namespace Sudoku.ORTools
     {
         public Sudoku.Core.Sudoku Solve(Sudoku.Core.Sudoku sudoku)
         {
+            //Sudoku -> Tableau
             int[,] sudokuInGrid = new int[9, 9];
 
             for (int i = 0; i < 9; i++)
@@ -31,18 +32,11 @@ namespace Sudoku.ORTools
             int n = cell_size * cell_size;
             IEnumerable<int> RANGE = Enumerable.Range(0, n);
 
-            //
-            // Decision variables
-            //
+            //Création de la grille de solution
             IntVar[,] grid = solver.MakeIntVarMatrix(n, n, 1, 9, "grid");
             IntVar[] grid_flat = grid.Flatten();
-            //
-            // Constraints
-            //
 
-
-
-            // init
+            //Tableau -> Solver
             foreach (int i in RANGE)
             {
                 foreach (int j in RANGE)
@@ -53,17 +47,20 @@ namespace Sudoku.ORTools
                     }
                 }
             }
+
+            //Un chiffre ne figure qu'une seule fois par ligne/colonne/cellule
             foreach (int i in RANGE)
             {
-                // rows
+                // Lignes
                 solver.Add((from j in RANGE
                             select grid[i, j]).ToArray().AllDifferent());
 
-                // cols
+                // Colonnes
                 solver.Add((from j in RANGE
                             select grid[j, i]).ToArray().AllDifferent());
             }
-            // cells
+            
+            //Cellules
             foreach (int i in CELL)
             {
                 foreach (int j in CELL)
@@ -74,17 +71,15 @@ namespace Sudoku.ORTools
                                  ).ToArray().AllDifferent());
                 }
             }
-            //
-            // Search
-            //
+
+            //Début de la résolution
             DecisionBuilder db = solver.MakePhase(grid_flat,
                                                   Solver.INT_VAR_SIMPLE,
                                                   Solver.INT_VALUE_SIMPLE);
-
             solver.NewSearch(db);
 
+            // Solver -> Liste
             var gridToSudoku = new List<int>();
-
             while (solver.NextSolution())
             {
                 for (int i = 0; i < n; i++)
@@ -96,6 +91,8 @@ namespace Sudoku.ORTools
                 }
             }
             solver.EndSearch();
+
+            //Liste -> Sudoku
             return new Sudoku.Core.Sudoku(gridToSudoku);
         }
         public static void Main(String[] args)
