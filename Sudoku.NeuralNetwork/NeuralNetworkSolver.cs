@@ -8,7 +8,9 @@ namespace Sudoku.NeuralNetwork
     {
         public Core.Sudoku Solve(Core.Sudoku s)
         {
-            return s;
+            var solution = (Core.Sudoku)s.Clone();
+            // InferenceSudoku(solution, 0);
+            return solution;
         }
     }
 }

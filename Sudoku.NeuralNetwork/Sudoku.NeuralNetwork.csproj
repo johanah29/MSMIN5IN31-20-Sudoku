@@ -5,6 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="15.0.8" />
+    <PackageReference Include="Keras.NET" Version="3.8.4.4" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Sudoku.Core\Sudoku.Core.csproj" />
   </ItemGroup>
 
