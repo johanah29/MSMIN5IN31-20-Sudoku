@@ -7,10 +7,12 @@ using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Mathematics;
+using BenchmarkDotNet.Order;
 using Sudoku.Core;
 
 namespace Sudoku.Benchmark
 {
+    [Orderer(SummaryOrderPolicy.FastestToSlowest)]
     [Config(typeof(Config))]
     [MinColumn, MaxColumn, MeanColumn, MedianColumn]
     public class BenchmarkSolvers
@@ -84,6 +86,10 @@ namespace Sudoku.Benchmark
             foreach (var puzzle in IterationPuzzles)
             {
                 var solution = SolverPresenter.Solver.Solve( puzzle.CloneSudoku());
+                if (!solution.IsValid(puzzle))
+                {
+                    throw new ApplicationException($"sudoku has {solution.NbErrors(puzzle)} errors");
+                }
             }
         }
 

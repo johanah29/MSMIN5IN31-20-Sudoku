@@ -64,7 +64,6 @@ namespace Sudoku.techniquesHumaines
 
         public Core.Sudoku Solve(Core.Sudoku s)
         {
-            Console.WriteLine(s.GetType());
             Puzzle puzzle = transformationToPuzzle(s);
             puzzle.RefreshCandidates();
             bool solved; // If this is true after a segment, the puzzle is solved and we can break
