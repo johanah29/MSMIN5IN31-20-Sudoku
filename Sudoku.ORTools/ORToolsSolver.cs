@@ -6,13 +6,14 @@ using System.Text.RegularExpressions;
 using Google.OrTools.ConstraintSolver;
 using Sudoku.Core;
 
+
+
 namespace Sudoku.ORTools
 {
     public class ORToolsSolver : ISudokuSolver
     {
         public Sudoku.Core.Sudoku Solve(Sudoku.Core.Sudoku sudoku)
         {
-
             int[,] sudokuInGrid = new int[9, 9];
 
             for (int i = 0; i < 9; i++)
@@ -30,29 +31,16 @@ namespace Sudoku.ORTools
             int n = cell_size * cell_size;
             IEnumerable<int> RANGE = Enumerable.Range(0, n);
 
-            // 0 marks an unknown value
-            /*int[,] initial_grid = {{0,0,0,0,9,4,0,3,0},
-                               {0,0,0,5,1,0,0,0,7},
-                               {0,8,9,0,0,0,0,4,0},
-                               {0,0,0,0,0,0,2,0,8},
-                               {0,6,0,2,0,1,0,5,0},
-                               {1,0,2,0,0,0,0,0,0},
-                               {0,7,0,0,0,0,5,2,0},
-                               {9,0,0,0,6,5,0,0,0},
-                               {0,4,0,9,7,0,0,0,0}};*/
-
-
-
-
             //
             // Decision variables
             //
             IntVar[,] grid = solver.MakeIntVarMatrix(n, n, 1, 9, "grid");
             IntVar[] grid_flat = grid.Flatten();
-
             //
             // Constraints
             //
+
+
 
             // init
             foreach (int i in RANGE)
@@ -65,11 +53,8 @@ namespace Sudoku.ORTools
                     }
                 }
             }
-
-
             foreach (int i in RANGE)
             {
-
                 // rows
                 solver.Add((from j in RANGE
                             select grid[i, j]).ToArray().AllDifferent());
@@ -77,9 +62,7 @@ namespace Sudoku.ORTools
                 // cols
                 solver.Add((from j in RANGE
                             select grid[j, i]).ToArray().AllDifferent());
-
             }
-
             // cells
             foreach (int i in CELL)
             {
@@ -91,8 +74,6 @@ namespace Sudoku.ORTools
                                  ).ToArray().AllDifferent());
                 }
             }
-
-
             //
             // Search
             //
@@ -102,45 +83,24 @@ namespace Sudoku.ORTools
 
             solver.NewSearch(db);
 
+            var gridToSudoku = new List<int>();
+
             while (solver.NextSolution())
             {
                 for (int i = 0; i < n; i++)
                 {
                     for (int j = 0; j < n; j++)
                     {
-                        Console.Write("{0} ", grid[i, j].Value());
+                        gridToSudoku.Add((int)grid[i, j].Value());
                     }
-                    Console.WriteLine();
                 }
-
-                Console.WriteLine();
             }
-
-            /*Console.WriteLine("\nSolutions: {0}", solver.Solutions());
-            Console.WriteLine("WallTime: {0}ms", solver.WallTime());
-            Console.WriteLine("Failures: {0}", solver.Failures());
-            Console.WriteLine("Branches: {0} ", solver.Branches());*/
-
             solver.EndSearch();
-
-
-            var gridToSudoku = new List<int>(81);
-
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    gridToSudoku.Add((int)grid[i, j].Value());
-                }
-            }
             return new Sudoku.Core.Sudoku(gridToSudoku);
-
         }
-
-
         public static void Main(String[] args)
         {
-            //Solve();
+
         }
     }
 }
