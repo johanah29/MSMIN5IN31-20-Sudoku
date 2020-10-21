@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku.Benchmark", "Sudoku.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku.CSPSolver", "Sudoku.CSPSolver\Sudoku.CSPSolver.csproj", "{113455AD-D104-4044-A64B-945E8817D34E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.DancingSolver", "Sudoku.DancingSolver\Sudoku.DancingSolver.csproj", "{BC399885-0732-45CF-A797-2539116873C6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{113455AD-D104-4044-A64B-945E8817D34E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{113455AD-D104-4044-A64B-945E8817D34E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{113455AD-D104-4044-A64B-945E8817D34E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC399885-0732-45CF-A797-2539116873C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC399885-0732-45CF-A797-2539116873C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC399885-0732-45CF-A797-2539116873C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC399885-0732-45CF-A797-2539116873C6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
