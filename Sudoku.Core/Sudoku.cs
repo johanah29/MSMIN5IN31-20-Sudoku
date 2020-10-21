@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.Loader;
 using System.Text;
 
 namespace Sudoku.Core
@@ -31,7 +33,6 @@ namespace Sudoku.Core
 
         // The List property makes it easier to manipulate cells,
         public List<int> Cells { get; set; } = Enumerable.Repeat(0, 81).ToList();
-
 
         public int GetCell(int x, int y)
         {
@@ -175,10 +176,6 @@ namespace Sudoku.Core
 
 
 
-
-       
-
-
         /// <summary>
         /// Parses a single Sudoku
         /// </summary>
@@ -250,7 +247,63 @@ namespace Sudoku.Core
 
         public object Clone()
         {
-            return new  Sudoku(this.Cells);
+            return CloneSudoku();
+        }
+
+        public Core.Sudoku CloneSudoku()
+        {
+            return new Sudoku(new List<int>(this.Cells));
+        }
+
+
+        public static IList<ISudokuSolver> GetSolvers()
+        {
+            var solvers = new List<ISudokuSolver>();
+
+            foreach (var file in Directory.GetFiles(AppDomain.CurrentDomain.BaseDirectory))
+            {
+                if (file.EndsWith("dll") && !(Path.GetFileName(file).StartsWith("libz3")))
+                {
+                    try
+                    {
+                        var assembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(file);
+                        foreach (var type in assembly.GetTypes())
+                        {
+                            if (typeof(ISudokuSolver).IsAssignableFrom(type) && !(typeof(ISudokuSolver) == type))
+                            {
+                                var solver = (ISudokuSolver)Activator.CreateInstance(type);
+                                solvers.Add(solver);
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e);
+                    }
+
+                }
+
+            }
+
+            return solvers;
+        }
+
+
+        public int NbErrors(Sudoku originalPuzzle)
+        {
+            // We use a large lambda expression to count duplicates in rows, columns and boxes
+            var cellsToTest = this.Cells.Select((c, i) => new { index = i, cell = c }).ToList();
+            var toTest = cellsToTest.GroupBy(x => x.index / 9).Select(g => g.Select(c => c.cell)) // rows
+                .Concat(cellsToTest.GroupBy(x => x.index % 9).Select(g => g.Select(c => c.cell))) //columns
+                .Concat(cellsToTest.GroupBy(x => x.index / 27 * 27 + x.index % 9 / 3 * 3).Select(g => g.Select(c => c.cell))); //boxes
+            var toReturn = toTest.Sum(test => test.GroupBy(x => x).Select(g => g.Count() - 1).Sum()); // Summing over duplicates
+            toReturn += cellsToTest.Count(x => originalPuzzle.Cells[x.index] > 0 && originalPuzzle.Cells[x.index] != x.cell); // Mask
+            return toReturn;
+        }
+
+        public bool IsValid(Sudoku originalPuzzle)
+        {
+            return NbErrors(originalPuzzle) == 0;
         }
 
     }
