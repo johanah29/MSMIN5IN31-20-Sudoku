@@ -5,21 +5,21 @@ using System.Xml;
 
 namespace Sudoku.GeneticAlgorithmSolver
 {
-    public class Sudoku
+    public class CombinatorialSudoku
     {
-        private Sudoku(int[,] cellValues)
+        private CombinatorialSudoku(int[,] cellValues)
         {
             CellValues = cellValues;
         }
 
-        public static Sudoku New(int[,] cellValues)
+        public static CombinatorialSudoku New(int[,] cellValues)
         {
-            return new Sudoku(MatrixHelper.DuplicateMatrix(cellValues));
+            return new CombinatorialSudoku(MatrixHelper.DuplicateMatrix(cellValues));
         }
 
-        public static Sudoku New(Sudoku sudoku)
+        public static CombinatorialSudoku New(CombinatorialSudoku sudoku)
         {
-            return new Sudoku(MatrixHelper.DuplicateMatrix(sudoku.CellValues));
+            return new CombinatorialSudoku(MatrixHelper.DuplicateMatrix(sudoku.CellValues));
         }
 
         public int[,] CellValues { get; }
@@ -75,7 +75,7 @@ namespace Sudoku.GeneticAlgorithmSolver
             return stringBuilder.ToString();
         }
 
-        public static Sudoku Convert(Core.Sudoku sudoku)
+        public static CombinatorialSudoku Convert(Core.Sudoku sudoku)
         {
             var problem = new[,]
             {
@@ -96,11 +96,11 @@ namespace Sudoku.GeneticAlgorithmSolver
                     problem[row - 1, column - 1] = sudoku.GetCell(row - 1, column - 1);
                 }
             }
-            return new Sudoku(problem);
+            return new CombinatorialSudoku(problem);
         }
 
 
-        public static Sudoku Difficult
+        public static CombinatorialSudoku Difficult
         {
             get
             {
@@ -117,7 +117,7 @@ namespace Sudoku.GeneticAlgorithmSolver
           {0, 5, 0, 0, 0, 1, 2, 0, 0}
         };
 
-                return new Sudoku(problem);
+                return new CombinatorialSudoku(problem);
             }
         }
 
@@ -125,7 +125,7 @@ namespace Sudoku.GeneticAlgorithmSolver
         /// http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=5412260
         /// no = 200, me = 9000
         /// </summary>
-        public static Sudoku VeryDifficult
+        public static CombinatorialSudoku VeryDifficult
         {
             get
             {
@@ -142,11 +142,11 @@ namespace Sudoku.GeneticAlgorithmSolver
           {0, 0, 0, 0, 1, 0, 0, 0, 0}
         };
 
-                return new Sudoku(problem);
+                return new CombinatorialSudoku(problem);
             }
         }
 
-        public static Sudoku Easy
+        public static CombinatorialSudoku Easy
         {
             get
             {
@@ -163,7 +163,7 @@ namespace Sudoku.GeneticAlgorithmSolver
           {0, 6, 5, 4, 0, 0, 2, 0, 0}
         };
 
-                return new Sudoku(problem);
+                return new CombinatorialSudoku(problem);
             }
         }
 
@@ -171,7 +171,7 @@ namespace Sudoku.GeneticAlgorithmSolver
         /// http://elmo.sbs.arizona.edu/sandiway/sudoku/examples.html
         /// no = 100, me = 19,000
         /// </summary>
-        public static Sudoku ExtremelyDifficult
+        public static CombinatorialSudoku ExtremelyDifficult
         {
             get
             {
@@ -188,7 +188,7 @@ namespace Sudoku.GeneticAlgorithmSolver
           {0, 2, 0, 0, 0, 0, 1, 0, 0}
         };
 
-                return new Sudoku(problem);
+                return new CombinatorialSudoku(problem);
             }
         }
 
@@ -196,7 +196,7 @@ namespace Sudoku.GeneticAlgorithmSolver
         /// http://elmo.sbs.arizona.edu/sandiway/sudoku/examples.html
         /// no = 100, me = 5,000
         /// </summary>
-        public static Sudoku MostDifficult
+        public static CombinatorialSudoku MostDifficult
         {
             get
             {
@@ -213,7 +213,7 @@ namespace Sudoku.GeneticAlgorithmSolver
           {0, 0, 0, 0, 0, 0, 0, 4, 0}
         };
 
-                return new Sudoku(problem);
+                return new CombinatorialSudoku(problem);
             }
         }
     }

@@ -1,52 +1,104 @@
 ﻿using System;
 using Sudoku.Core;
-using System.Collections.Generic;
+using GeneticSharp.Domain;
+using GeneticSharp.Domain.Chromosomes;
+using GeneticSharp.Domain.Crossovers;
+using GeneticSharp.Domain.Mutations;
+using GeneticSharp.Domain.Populations;
+using GeneticSharp.Domain.Selections;
+using GeneticSharp.Domain.Terminations;
 
 namespace Sudoku.GeneticAlgorithmSolver
 {
     public class GeneticAlgorithmSolver: ISudokuSolver
     {
+
+        static GeneticAlgorithmSolver()
+        {
+           var init = SudokuPermutationsChromosome.AllPermutations;
+        }
+
         public Core.Sudoku Solve(Core.Sudoku s)
         {
-            
-            var sudokuTab =  (Core.Sudoku)s.Clone();
-            Console.WriteLine("Begin solving Sudoku using combinatorial evolution");
-            Console.WriteLine("The Sudoku is:");
 
-            var sudoku = Sudoku.Convert(sudokuTab);
+            //var toReturn = SolveCombinatorial(s);
 
-            const int numOrganisms = 200;
-            const int maxEpochs = 5000;
-            const int maxRestarts = 40;
-            Console.WriteLine($"Setting numOrganisms: {numOrganisms}");
-            Console.WriteLine($"Setting maxEpochs: {maxEpochs}");
-            Console.WriteLine($"Setting maxRestarts: {maxRestarts}");
+            var toReturn = SolveGeneticSharp(s);
 
-            var solver = new SudokuSolver();
-            var solvedSudoku = solver.Solve(sudoku, numOrganisms, maxEpochs, maxRestarts);
-
-            Console.WriteLine(solvedSudoku.Error == 0 ? "Success" : "Did not find optimal solution");
-            Console.WriteLine("End Sudoku using combinatorial evolution");
-            var solution = ConvertSolution(solvedSudoku);
-
-            return solution;
-            
+            return toReturn;
         }
-        public Core.Sudoku ConvertSolution(Sudoku sudoku)
+
+
+        public Core.Sudoku SolveGeneticSharp(Core.Sudoku s)
         {
 
-            var list = new List<int> { };
-            for (int row = 1; row <= 9; row++)
+            var populationSize = 10000;
+            IChromosome sudokuChromosome = new SudokuPermutationsChromosome(s);
+            //IChromosome sudokuChromosome = new SudokuCellsChromosome(s);
+            var fitnessThreshold = 0;
+            //var generationNb = 50;
+            var crossoverProbability = 0.75f;
+            var mutationProbability = 0.2f;
+            var fitness = new SudokuFitness(s);
+            var selection = new EliteSelection();
+            var crossover = new UniformCrossover();
+            var mutation = new UniformMutation();
+
+            IChromosome bestIndividual;
+            var solution = s;
+            int nbErrors = int.MaxValue;
+
+            
+            do
             {
-                for (int column = 1; column <= 9; column++)
+                var population = new Population(populationSize, populationSize, sudokuChromosome);
+                var ga = new GeneticAlgorithm(population, fitness, selection, crossover, mutation)
                 {
-                    list.Add(sudoku.CellValues[row - 1, column - 1]);
+                    Termination = new OrTermination(new ITermination[]
+                    {
+                        new FitnessThresholdTermination(fitnessThreshold),
+                        new FitnessStagnationTermination(10), 
+                        //new GenerationNumberTermination(generationNb)
+                        //new TimeEvolvingTermination(TimeSpan.FromSeconds(10)), 
+                    }),
+                    MutationProbability = mutationProbability,
+                    CrossoverProbability = crossoverProbability,
+                    OperatorsStrategy = new TplOperatorsStrategy(),
+
+                };
+                ga.GenerationRan+= delegate(object sender, EventArgs args)
+                {
+                    bestIndividual = (ga.Population.BestChromosome);
+                    solution = ((ISudokuChromosome)bestIndividual).GetSudokus()[0];
+                    nbErrors = solution.NbErrors(s);
+                    Console.WriteLine($"Generation #{ga.GenerationsNumber}: best individual has {nbErrors} errors");
+                };
+                ga.Start();
+
+                //bestIndividual = (ga.Population.BestChromosome);
+                //solution = ((ISudokuChromosome)bestIndividual).GetSudokus()[0];
+                //nbErrors = solution.NbErrors(s);
+                if (nbErrors == 0) 
+                {
+                    break;
                 }
-            }
-            var output = new Core.Sudoku(list);
-            return output;
+                else
+                {
+                    populationSize *= 2;
+                    Console.WriteLine($"Genetic search failed with {nbErrors} resulting errors, doubling population to {populationSize}");
+                }
+                
+
+            } while (true);
+
+            
+
+            return solution;
 
         }
+
+
+       
 
     }
 

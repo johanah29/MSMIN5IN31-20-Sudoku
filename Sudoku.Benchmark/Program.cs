@@ -23,7 +23,7 @@ namespace Sudoku.Benchmark
 
                 while (true)
                 {
-                    Console.WriteLine("Select Mode: 1-Single Solver Test, 2-Complete Benchmark");
+                    Console.WriteLine("Select Mode: \n1-Single Solver Test, \n2-Complete Benchmark (40 s max per sudoku), \n3-Complete Benchmark (5 mn max per Sudoku)");
                     var strMode = Console.ReadLine();
                     int intMode;
                     int.TryParse(strMode, out intMode);
@@ -32,8 +32,11 @@ namespace Sudoku.Benchmark
                         case 1:
                             SingleSolverTest();
                             break;
+                        case 2:
+                            BenchmarkRunner.Run<BenchmarkSolvers>();
+                            break;
                         default:
-                            var summary = BenchmarkRunner.Run<BenchmarkSolvers>();
+                            BenchmarkRunner.Run<FiveMinutesBenchmarkSolvers>();
                             break;
                         
                     }

@@ -2,39 +2,40 @@ using System;
 
 namespace Sudoku.GeneticAlgorithmSolver
 {
-  public class SudokuSolver
+  public class CombinatorialSudokuSolver
   {
     private Random _rnd;
 
-    public SudokuSolver()
+    public CombinatorialSudokuSolver()
     {
       _rnd = new Random();
     }
 
-    public Sudoku Solve(Sudoku sudoku, int numOrganisms, int maxEpochs, int maxRestarts)
+    public CombinatorialSudoku Solve(CombinatorialSudoku sudoku, int numOrganisms, int maxEpochs, int maxRestarts)
     {
       var error = int.MaxValue;
-      Sudoku bestSolution = null;
+      CombinatorialSudoku bestSolution = null;
       var attempt = 0;
       while (error != 0 && attempt < maxRestarts)
       {
-        Console.WriteLine($"Attempt: {attempt}");
+        Console.WriteLine($"Attempt: {attempt}, {numOrganisms} individuals");
         _rnd = new Random(attempt);
         bestSolution = SolveInternal(sudoku, numOrganisms, maxEpochs);
         error = bestSolution.Error;
+        numOrganisms += numOrganisms/10;
         ++attempt;
       }
 
       return bestSolution;
     }
 
-    private Sudoku SolveInternal(Sudoku sudoku, int numOrganisms, int maxEpochs)
+    private CombinatorialSudoku SolveInternal(CombinatorialSudoku sudoku, int numOrganisms, int maxEpochs)
     {
       var numberOfWorkers = (int) (numOrganisms * 0.90);
       var hive = new Organism[numOrganisms];
 
       var bestError = int.MaxValue;
-      Sudoku bestSolution = null;
+      CombinatorialSudoku bestSolution = null;
 
       for (var i = 0; i < numOrganisms; ++i)
       {
@@ -42,14 +43,14 @@ namespace Sudoku.GeneticAlgorithmSolver
           ? OrganismType.Worker
           : OrganismType.Explorer;
 
-        var randomSudoku = Sudoku.New(MatrixHelper.RandomMatrix(_rnd, sudoku.CellValues));
+        var randomSudoku = CombinatorialSudoku.New(MatrixHelper.RandomMatrix(_rnd, sudoku.CellValues));
         var err = randomSudoku.Error;
 
         hive[i] = new Organism(organismType, randomSudoku.CellValues, err, 0);
 
         if (err >= bestError) continue;
         bestError = err;
-        bestSolution = Sudoku.New(randomSudoku);
+        bestSolution = CombinatorialSudoku.New(randomSudoku);
       }
 
       var epoch = 0;
@@ -66,7 +67,7 @@ namespace Sudoku.GeneticAlgorithmSolver
           if (hive[i].Type == OrganismType.Worker)
           {
             var neighbor = MatrixHelper.NeighborMatrix(_rnd, sudoku.CellValues, hive[i].Matrix);
-            var neighborSudoku = Sudoku.New(neighbor);
+            var neighborSudoku = CombinatorialSudoku.New(neighbor);
             var neighborError = neighborSudoku.Error;
 
             var p = _rnd.NextDouble();
@@ -84,13 +85,13 @@ namespace Sudoku.GeneticAlgorithmSolver
             {
               hive[i].Age++;
               if (hive[i].Age <= 1000) continue;
-              var randomSudoku = Sudoku.New(MatrixHelper.RandomMatrix(_rnd, sudoku.CellValues));
+              var randomSudoku = CombinatorialSudoku.New(MatrixHelper.RandomMatrix(_rnd, sudoku.CellValues));
               hive[i] = new Organism(0, randomSudoku.CellValues, randomSudoku.Error, 0);
             }
           }
           else
           {
-            var randomSudoku = Sudoku.New(MatrixHelper.RandomMatrix(_rnd, sudoku.CellValues));
+            var randomSudoku = CombinatorialSudoku.New(MatrixHelper.RandomMatrix(_rnd, sudoku.CellValues));
             hive[i].Matrix = MatrixHelper.DuplicateMatrix(randomSudoku.CellValues);
             hive[i].Error = randomSudoku.Error;
 
@@ -129,7 +130,7 @@ namespace Sudoku.GeneticAlgorithmSolver
         }
 
         var merged = MatrixHelper.MergeMatrices(_rnd, hive[bestWorkerIndex].Matrix, hive[bestExplorerIndex].Matrix);
-        var mergedSudoku = Sudoku.New(merged);
+        var mergedSudoku = CombinatorialSudoku.New(merged);
 
         hive[worstWorkerIndex] = new Organism(0, merged, mergedSudoku.Error, 0);
         if (hive[worstWorkerIndex].Error < bestError)
