@@ -94,14 +94,23 @@ namespace Sudoku.Benchmark
             int intSolver;
             int.TryParse(strSolver, out intSolver);
             var solver = solvers[intSolver - 1];
-           
-           
+
+            var cloneSudoku = targetSudoku.CloneSudoku();
             var sw = Stopwatch.StartNew();
 
-            var solution = solver.Solve(targetSudoku);
+            var solution = solver.Solve(cloneSudoku);
 
             var elapsed = sw.Elapsed;
-            Console.WriteLine("solution:");
+            if (!solution.IsValid(targetSudoku))
+            {
+                Console.WriteLine($"Invalid Solution : Solution has {solution.NbErrors(targetSudoku)} errors");
+                Console.WriteLine("Invalid solution:");
+            }
+            else
+            {
+                Console.WriteLine("Valid solution:");
+            }
+            
             Console.WriteLine(solution.ToString());
             Console.WriteLine($"Time to solution: {elapsed.TotalMilliseconds} ms");
 

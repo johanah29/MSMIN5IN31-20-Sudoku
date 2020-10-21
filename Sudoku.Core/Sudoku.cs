@@ -34,7 +34,6 @@ namespace Sudoku.Core
         // The List property makes it easier to manipulate cells,
         public List<int> Cells { get; set; } = Enumerable.Repeat(0, 81).ToList();
 
-
         public int GetCell(int x, int y)
         {
             return Cells[(9 * x) + y];
@@ -156,10 +155,6 @@ namespace Sudoku.Core
 
 
 
-
-       
-
-
         /// <summary>
         /// Parses a single Sudoku
         /// </summary>
@@ -271,6 +266,27 @@ namespace Sudoku.Core
 
             return solvers;
         }
+
+
+        public int NbErrors(Sudoku originalPuzzle)
+        {
+            // We use a large lambda expression to count duplicates in rows, columns and boxes
+            var cellsToTest = this.Cells.Select((c, i) => new { index = i, cell = c }).ToList();
+            var toTest = cellsToTest.GroupBy(x => x.index / 9).Select(g => g.Select(c => c.cell)) // rows
+                .Concat(cellsToTest.GroupBy(x => x.index % 9).Select(g => g.Select(c => c.cell))) //columns
+                .Concat(cellsToTest.GroupBy(x => x.index / 27 * 27 + x.index % 9 / 3 * 3).Select(g => g.Select(c => c.cell))); //boxes
+            var toReturn = toTest.Sum(test => test.GroupBy(x => x).Select(g => g.Count() - 1).Sum()); // Summing over duplicates
+            toReturn += cellsToTest.Count(x => originalPuzzle.Cells[x.index] > 0 && originalPuzzle.Cells[x.index] != x.cell); // Mask
+            return toReturn;
+        }
+
+        public bool IsValid(Sudoku originalPuzzle)
+        {
+            return NbErrors(originalPuzzle) == 0;
+        }
+
+
+
 
 
     }
