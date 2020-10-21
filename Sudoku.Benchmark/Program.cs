@@ -15,15 +15,16 @@ namespace Sudoku.Benchmark
     {
         static void Main(string[] args)
         {
-            try
+
+
+
+            Console.WriteLine("Benchmarking Sudoku Solvers");
+
+            while (true)
             {
-               
-
-                Console.WriteLine("Benchmarking Sudoku Solvers");
-
-                while (true)
+                try
                 {
-                    Console.WriteLine("Select Mode: \n1-Single Solver Test, \n2-Complete Benchmark (40 s max per sudoku), \n3-Complete Benchmark (5 mn max per Sudoku)");
+                    Console.WriteLine("Select Mode: \n1-Single Solver Test, \n2-Complete Benchmark (40 s max per sudoku), \n3-Complete Benchmark (5 mn max per Sudoku), \n4-Exit program");
                     var strMode = Console.ReadLine();
                     int intMode;
                     int.TryParse(strMode, out intMode);
@@ -35,24 +36,18 @@ namespace Sudoku.Benchmark
                         case 2:
                             BenchmarkRunner.Run<BenchmarkSolvers>();
                             break;
-                        default:
+                        case 3:
                             BenchmarkRunner.Run<FiveMinutesBenchmarkSolvers>();
                             break;
-                        
+                        default:
+                            return;
                     }
-
-
-
-                   
                 }
-              
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-            
-            
         }
 
 
