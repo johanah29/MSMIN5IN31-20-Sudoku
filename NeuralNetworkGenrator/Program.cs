@@ -12,7 +12,6 @@ namespace NeuralNetworkGenrator
 
             (model, accuracy) = Model.TrainAndTest(model);
 
-
             Console.WriteLine("Accuracy : " + accuracy + "%");
         }
     }

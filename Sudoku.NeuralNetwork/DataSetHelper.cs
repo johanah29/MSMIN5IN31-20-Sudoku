@@ -53,7 +53,7 @@ namespace Sudoku.NeuralNetwork
 			List<NDarray> rawRes = new List<NDarray>();
 			foreach(Core.Sudoku sudoku in sudokus)
             {
-				rawRes.Add(np.array(sudoku.Cells.ToArray()).reshape(9, 9));
+				rawRes.Add(np.array(sudoku.Cells.ToArray()).reshape(9, 9, 1));
 			}
 
 			NDarray res = np.array(rawRes.ToArray());
@@ -62,9 +62,9 @@ namespace Sudoku.NeuralNetwork
 			return res;
         }
 
-		private static string GetFullPath(string relativePath)
+		public static string GetFullPath(string relativePath)
 		{
-			return System.IO.Path.Combine(Environment.CurrentDirectory, @"..\..\..\" + relativePath);
+			return System.IO.Path.Combine(Environment.CurrentDirectory, @"..\..\..\..\" + relativePath);
 		}
 	}
 }

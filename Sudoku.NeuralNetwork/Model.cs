@@ -34,7 +34,7 @@ namespace Sudoku.NeuralNetwork
         public static (BaseModel model, double accuracy) TrainAndTest(BaseModel model)
         {
             // Global parameters
-            string datasetPath = @"Dataset\sudoku.csv.gz";
+            string datasetPath = @"Sudoku.NeuralNetwork\Dataset\sudoku.csv.gz";
             int numSudokus = 1000;
 
             // ML parameters
@@ -63,20 +63,22 @@ namespace Sudoku.NeuralNetwork
 
             // Test model
             int correct = 0;
-            for(int i = 0; i < sPuzzlesTest.size; i++)
+            for(int i = 0; i < 10; i++)
             {
+                Console.WriteLine("Testing " + i);
+
                 // Predict result
                 var prediction = Solve(sPuzzlesTest[i], model);
 
                 // Convert to sudoku
                 var sPredict = new Core.Sudoku() { Cells = prediction.flatten().astype(np.int32).GetData<int>().ToList() };
-                var sSol = new Core.Sudoku() { Cells = sSolsTest[i].flatten().astype(np.int32).GetData<int>().ToList() };
+                var sSol = new Core.Sudoku() { Cells = ((sSolsTest[i] + 0.5) * 9).flatten().astype(np.int32).GetData<int>().ToList() };
 
                 // Compare sudoku
                 var same = true;
                 for(int j = 0; j < 9; j++)
                 {
-                    for(int k = 1; k <= 9; k++)
+                    for(int k = 0; k < 9; k++)
                     {
                         if(sPredict.GetCell(j, k) != sSol.GetCell(j, k))
                         {
@@ -84,6 +86,8 @@ namespace Sudoku.NeuralNetwork
                         }
                     }
                 }
+                Console.WriteLine("Prediction : \n" + prediction);
+                Console.WriteLine("Solution : \n" + sSol);
 
                 if(same)
                 {
@@ -106,11 +110,12 @@ namespace Sudoku.NeuralNetwork
             {
                 var output = model.Predict(sFeatures.reshape(1, 9, 9, 1));
                 output = output.squeeze();
-                prediction = np.argmax(output, axis: 2).reshape(9, 9) + 1;
-                var proba = np.around(np.max(output, axis: new[] { 2 }).reshape(9, 9), 2);
+                prediction = np.argmax(output, axis: 1).reshape(9, 9) + 1;
+                var proba = np.around(np.max(output, axis: new[] { 1 }).reshape(9, 9), 2);
 
-                sFeatures = (sFeatures + 0.5) * 9;
+                sFeatures = ((sFeatures + 0.5) * 9).reshape((9,9));
 
+                // Si plus de 0 dans le sudokus 
                 var mask = sFeatures.@equals(0);
                 if (((int)mask.sum()) == 0)
                 {
@@ -127,7 +132,7 @@ namespace Sudoku.NeuralNetwork
                 sFeatures = (sFeatures / 9) - 0.5;
             }
 
-            return prediction;
+            return sFeatures;
         }
 
         public static Core.Sudoku SolveSudoku(Core.Sudoku s, BaseModel model)

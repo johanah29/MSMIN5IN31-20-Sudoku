@@ -17,7 +17,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku.TechniquesHumaines",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku.NeuralNetwork", "Sudoku.NeuralNetwork\Sudoku.NeuralNetwork.csproj", "{72ED97A6-484E-4E28-A078-A0830825822C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NeuralNetworkGenrator", "NeuralNetworkGenrator\NeuralNetworkGenrator.csproj", "{8EEC62A6-99F6-46EB-B410-A1EE5F1B9CBB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeuralNetworkGenerator", "NeuralNetworkGenrator\NeuralNetworkGenerator.csproj", "{8EEC62A6-99F6-46EB-B410-A1EE5F1B9CBB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
