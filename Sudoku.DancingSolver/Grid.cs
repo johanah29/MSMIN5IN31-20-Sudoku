@@ -38,6 +38,11 @@ namespace Sudoku.DancingSolver
             _rows = rows.ToImmutableList();
         }
 
+        public Grid(ImmutableList<Core.Sudoku> immutableLists)
+        {
+            this.immutableLists = immutableLists;
+        }
+
         public int ValueAt(int row, int col)
         {
             return _rows[row][col];
@@ -72,6 +77,7 @@ namespace Sudoku.DancingSolver
         private static readonly string HorizontalAndUp = Encoding850.GetString(new byte[] { 193 });
         private static readonly string HorizontalAndDown = Encoding850.GetString(new byte[] { 194 });
         private static readonly string HorizontalAndVertical = Encoding850.GetString(new byte[] { 197 });
+        private ImmutableList<Core.Sudoku> immutableLists;
 
         private void DrawRow(int row)
         {

@@ -1,4 +1,5 @@
 ﻿using System;
+using Sudoku.Core;
 using System.Collections.Generic;
 using System.Text;
 using System.Collections.Immutable;
@@ -7,44 +8,11 @@ using DlxLib;
 
 namespace Sudoku.DancingSolver
 {
-    internal static class DancingSolver
+    public class DancingSolver : ISudokuSolver
     {
-        private static void Main()
+        public static void Main(String[] args)
         {
-            // http://puzzles.telegraph.co.uk/site/search_puzzle_number?id=27744
-            var grid = new Grid(ImmutableList.Create(
-                "6 4 9 7 3",
-                "  3    6 ",
-                "       18",
-                "   18   9",
-                "     43  ",
-                "7   39   ",
-                " 7       ",
-                " 4    8  ",
-                "9 8 6 4 5"));
 
-            grid.Draw();
-
-            var internalRows = BuildInternalRowsForGrid(grid);
-            var dlxRows = BuildDlxRows(internalRows);
-            var solutions = new Dlx()
-                .Solve(dlxRows, d => d, r => r)
-                .Where(solution => VerifySolution(internalRows, solution))
-                .ToImmutableList();
-
-            Console.WriteLine();
-
-            if (solutions.Any())
-            {
-                Console.WriteLine($"First solution (of {solutions.Count}):");
-                Console.WriteLine();
-                DrawSolution(internalRows, solutions.First());
-                Console.WriteLine();
-            }
-            else
-            {
-                Console.WriteLine("No solutions found!");
-            }
         }
 
         private static IEnumerable<int> Rows => Enumerable.Range(0, 9);
@@ -175,11 +143,45 @@ namespace Sudoku.DancingSolver
             return new Grid(rowStrings);
         }
 
-        private static void DrawSolution(
+        /*private static void DrawSolution(
             IReadOnlyList<Tuple<int, int, int, bool>> internalRows,
             Solution solution)
         {
             SolutionToGrid(internalRows, solution).Draw();
+        }*/
+
+        public Core.Sudoku Solve(Core.Sudoku s)
+        {
+            // http://puzzles.telegraph.co.uk/site/search_puzzle_number?id=27744
+            var grid = new Grid(ImmutableList.Create(s));
+
+
+            var internalRows = BuildInternalRowsForGrid(grid);
+            var dlxRows = BuildDlxRows(internalRows);
+            var solutions = new Dlx()
+                .Solve(dlxRows, d => d, r => r)
+                .Where(solution => VerifySolution(internalRows, solution))
+                .ToImmutableList();
+
+            Console.WriteLine();
+
+            if (solutions.Any())
+            {
+                Console.WriteLine($"First solution (of {solutions.Count}):");
+                Console.WriteLine();
+                
+
+                /*DrawSolution(internalRows, solutions.First());
+                Console.WriteLine();*/
+            }
+            else
+            {
+                Console.WriteLine("No solutions found!");
+            }
+
+            return new Sudoku.Core.Sudoku(solutions.First());
+
+
         }
     }
 }
