@@ -15,11 +15,7 @@ namespace Sudoku.Core
         private static readonly int[] Indices = Enumerable.Range(0, 9).ToArray();
 
 
-        public Sudoku(int[] grid)
-        {
-
-        }
-
+      
         public Sudoku(List<int> lsol)
         {
             this.Cells = lsol;
