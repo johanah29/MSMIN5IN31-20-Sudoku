@@ -11,13 +11,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku.Benchmark", "Sudoku.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku.CSPSolver", "Sudoku.CSPSolver\Sudoku.CSPSolver.csproj", "{113455AD-D104-4044-A64B-945E8817D34E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.DancingSolver", "Sudoku.DancingSolver\Sudoku.DancingSolver.csproj", "{BC399885-0732-45CF-A797-2539116873C6}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sudoku.Z3", "sudoku.Z3\sudoku.Z3.csproj", "{535E4965-FEBA-47A5-B1D9-BB0359FF9102}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku.TechniquesHumaines", "Sudoku.techniquesHumaines\Sudoku.TechniquesHumaines.csproj", "{462F47CB-42FB-4144-A570-1DEA4C80749A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku.NeuralNetwork", "Sudoku.NeuralNetwork\Sudoku.NeuralNetwork.csproj", "{72ED97A6-484E-4E28-A078-A0830825822C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sudoku.ORTools", "Sudoku.ORTools\Sudoku.ORTools.csproj", "{699694C4-DAA5-47CC-A7DD-D4F94F4D9738}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NeuralNetworkGenerator", "NeuralNetworkGenrator\NeuralNetworkGenerator.csproj", "{8EEC62A6-99F6-46EB-B410-A1EE5F1B9CBB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sudoku.GeneticAlgorithmSolver", "Sudoku.GeneticAlgorithmSolver\Sudoku.GeneticAlgorithmSolver.csproj", "{FA787077-943D-480B-8C0B-03B0ED7AA964}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,10 @@ Global
 		{113455AD-D104-4044-A64B-945E8817D34E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{113455AD-D104-4044-A64B-945E8817D34E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{113455AD-D104-4044-A64B-945E8817D34E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC399885-0732-45CF-A797-2539116873C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC399885-0732-45CF-A797-2539116873C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC399885-0732-45CF-A797-2539116873C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC399885-0732-45CF-A797-2539116873C6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{535E4965-FEBA-47A5-B1D9-BB0359FF9102}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{535E4965-FEBA-47A5-B1D9-BB0359FF9102}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{535E4965-FEBA-47A5-B1D9-BB0359FF9102}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -49,14 +55,14 @@ Global
 		{462F47CB-42FB-4144-A570-1DEA4C80749A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{462F47CB-42FB-4144-A570-1DEA4C80749A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{462F47CB-42FB-4144-A570-1DEA4C80749A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{72ED97A6-484E-4E28-A078-A0830825822C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{72ED97A6-484E-4E28-A078-A0830825822C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{72ED97A6-484E-4E28-A078-A0830825822C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{72ED97A6-484E-4E28-A078-A0830825822C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8EEC62A6-99F6-46EB-B410-A1EE5F1B9CBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8EEC62A6-99F6-46EB-B410-A1EE5F1B9CBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8EEC62A6-99F6-46EB-B410-A1EE5F1B9CBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8EEC62A6-99F6-46EB-B410-A1EE5F1B9CBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{699694C4-DAA5-47CC-A7DD-D4F94F4D9738}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{699694C4-DAA5-47CC-A7DD-D4F94F4D9738}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{699694C4-DAA5-47CC-A7DD-D4F94F4D9738}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{699694C4-DAA5-47CC-A7DD-D4F94F4D9738}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA787077-943D-480B-8C0B-03B0ED7AA964}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA787077-943D-480B-8C0B-03B0ED7AA964}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA787077-943D-480B-8C0B-03B0ED7AA964}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA787077-943D-480B-8C0B-03B0ED7AA964}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

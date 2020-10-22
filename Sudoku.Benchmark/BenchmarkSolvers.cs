@@ -1,16 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Columns;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Environments;
 using BenchmarkDotNet.Jobs;
 using BenchmarkDotNet.Mathematics;
+using BenchmarkDotNet.Order;
+using Perfolizer.Horology;
 using Sudoku.Core;
 
 namespace Sudoku.Benchmark
 {
+    public class FiveMinutesBenchmarkSolvers : BenchmarkSolvers
+    {
+        public FiveMinutesBenchmarkSolvers()
+        {
+            MaxSolverDuration = TimeSpan.FromMinutes(5);
+        }
+    }
+
+
+
+    [Orderer(SummaryOrderPolicy.FastestToSlowest)]
     [Config(typeof(Config))]
     [MinColumn, MaxColumn, MeanColumn, MedianColumn]
     public class BenchmarkSolvers
@@ -31,8 +46,8 @@ namespace Sudoku.Benchmark
                     .WithRuntime(CoreRuntime.Core31)
                     .WithLaunchCount(1)
                     .WithWarmupCount(1)
+                    .WithInvocationCount(2)
                     
-                    //.WithInvocationCount(5)
                 );
                 
 
@@ -62,6 +77,10 @@ namespace Sudoku.Benchmark
 
         }
 
+        private static Stopwatch Clock = Stopwatch.StartNew();
+
+        public TimeSpan MaxSolverDuration = TimeSpan.FromSeconds(40);
+
         public int NbPuzzles { get; set; } = 10;
 
         [ParamsAllValues]
@@ -78,12 +97,24 @@ namespace Sudoku.Benchmark
             return Core.Sudoku.GetSolvers().Select(s=>new SolverPresenter() {Solver = s});
         }
 
+
         [Benchmark(Description = "Benchmarking Sudoku Solvers")]
         public void Benchmark()
         {
             foreach (var puzzle in IterationPuzzles)
             {
-                var solution = SolverPresenter.Solver.Solve( puzzle.CloneSudoku());
+                Console.WriteLine($"Solver {SolverPresenter.ToString()} solving sudoku: \n {puzzle.ToString()}");
+                var startTime = Clock.Elapsed;
+                var solution = SolverPresenter.SolveWithTimeLimit( puzzle, MaxSolverDuration);
+                if (!solution.IsValid(puzzle))
+                {
+                    throw new ApplicationException($"sudoku has {solution.NbErrors(puzzle)} errors");
+                }
+
+                var duration = Clock.Elapsed - startTime;
+                var durationSeconds = (int) duration.TotalSeconds;
+                var durationMilliSeconds = duration.TotalMilliseconds - (1000 * durationSeconds);
+                Console.WriteLine($"Valid Solution found: \n {solution.ToString()} \n Solver {SolverPresenter.ToString()} found the solution  in {durationSeconds} s {durationMilliSeconds} ms");
             }
         }
 
@@ -92,12 +123,36 @@ namespace Sudoku.Benchmark
     public class SolverPresenter
     {
 
+        
+
         public ISudokuSolver Solver { get; set; }
 
         public override string ToString()
         {
             return Solver.GetType().Name;
         }
+
+        public  Core.Sudoku SolveWithTimeLimit(Core.Sudoku puzzle, TimeSpan maxDuration)
+        {
+            try
+            {
+                Core.Sudoku toReturn = null;
+               
+                Task task = Task.Factory.StartNew(() => toReturn = Solver.Solve(puzzle.CloneSudoku()));
+                task.Wait(maxDuration);
+                if (!task.IsCompleted)
+                {
+                    throw new ApplicationException($"Solver {ToString()} has exceeded the maximum allowed duration {maxDuration.TotalSeconds} seconds");
+                }
+                return toReturn;
+
+            }
+            catch (AggregateException ae)
+            {
+                throw ae.InnerExceptions[0];
+            }
+        }
+
     }
 
 

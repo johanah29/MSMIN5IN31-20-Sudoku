@@ -15,15 +15,16 @@ namespace Sudoku.Benchmark
     {
         static void Main(string[] args)
         {
-            try
+
+
+
+            Console.WriteLine("Benchmarking Sudoku Solvers");
+
+            while (true)
             {
-               
-
-                Console.WriteLine("Benchmarking Sudoku Solvers");
-
-                while (true)
+                try
                 {
-                    Console.WriteLine("Select Mode: 1-Single Solver Test, 2-Complete Benchmark");
+                    Console.WriteLine("Select Mode: \n1-Single Solver Test, \n2-Complete Benchmark (40 s max per sudoku), \n3-Complete Benchmark (5 mn max per Sudoku), \n4-Exit program");
                     var strMode = Console.ReadLine();
                     int intMode;
                     int.TryParse(strMode, out intMode);
@@ -32,24 +33,21 @@ namespace Sudoku.Benchmark
                         case 1:
                             SingleSolverTest();
                             break;
-                        default:
-                            var summary = BenchmarkRunner.Run<BenchmarkSolvers>();
+                        case 2:
+                            BenchmarkRunner.Run<BenchmarkSolvers>();
                             break;
-                        
+                        case 3:
+                            BenchmarkRunner.Run<FiveMinutesBenchmarkSolvers>();
+                            break;
+                        default:
+                            return;
                     }
-
-
-
-                   
                 }
-              
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-            
-            
         }
 
 
@@ -94,14 +92,23 @@ namespace Sudoku.Benchmark
             int intSolver;
             int.TryParse(strSolver, out intSolver);
             var solver = solvers[intSolver - 1];
-           
-           
+
+            var cloneSudoku = targetSudoku.CloneSudoku();
             var sw = Stopwatch.StartNew();
 
-            var solution = solver.Solve(targetSudoku);
+            var solution = solver.Solve(cloneSudoku);
 
             var elapsed = sw.Elapsed;
-            Console.WriteLine("solution:");
+            if (!solution.IsValid(targetSudoku))
+            {
+                Console.WriteLine($"Invalid Solution : Solution has {solution.NbErrors(targetSudoku)} errors");
+                Console.WriteLine("Invalid solution:");
+            }
+            else
+            {
+                Console.WriteLine("Valid solution:");
+            }
+            
             Console.WriteLine(solution.ToString());
             Console.WriteLine($"Time to solution: {elapsed.TotalMilliseconds} ms");
 
