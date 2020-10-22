@@ -11,53 +11,103 @@ using System.Diagnostics;
 namespace sudoku.Z3
 {
 
+    
     public class Z3Solver : ISudokuSolver
     {
-        Context _ctx = new Context();
-        
+        protected static Context z3Context = new Context();
+
         // 9x9 matrix of integer variables
-        IntExpr[][] X = new IntExpr[9][];
-        private BoolExpr sudoku_c;
-        public Z3Solver()
+        static IntExpr[][] X = new IntExpr[9][];
+        static BoolExpr _GenericContraints;
+
+        private static Solver _reusableZ3Solver;
+
+        static  Z3Solver()
         {
-            PrepareGenericConstraints();
+            PrepareVariables();
         }
 
-        private void PrepareGenericConstraints()
+        public static BoolExpr GenericContraints
         {
-           
+            get
+            {
+                if (_GenericContraints == null)
+                {
+                    _GenericContraints = GetGenericConstraints();
+                }
+                return _GenericContraints;
+            }
+        }
+
+        public static Solver ReusableZ3Solver
+        {
+            get
+            {
+                if (_reusableZ3Solver == null)
+                {
+                    _reusableZ3Solver = z3Context.MkSolver();
+                    _reusableZ3Solver.Assert(GenericContraints);
+                }
+                return _reusableZ3Solver;
+            }
+        }
+
+
+
+        BoolExpr GetPuzzleConstraint(Sudoku.Core.Sudoku instance)
+        {
+            BoolExpr instance_c = z3Context.MkTrue();
+            for (int i = 0; i < 9; i++)
+            for (int j = 0; j < 9; j++)
+                if (instance.GetCell(i, j) != 0)
+                {
+                    instance_c = z3Context.MkAnd(instance_c,
+                        (BoolExpr)
+                        z3Context.MkEq(X[i][j], z3Context.MkInt(instance.GetCell(i, j))));
+                }
+            return instance_c;
+        }
+
+        static void PrepareVariables()
+        {
             for (uint i = 0; i < 9; i++)
             {
                 X[i] = new IntExpr[9];
                 for (uint j = 0; j < 9; j++)
-                    X[i][j] = (IntExpr)_ctx.MkConst(_ctx.MkSymbol("x_" + (i + 1) + "_" + (j + 1)), _ctx.IntSort);
+                    X[i][j] = (IntExpr)z3Context.MkConst(z3Context.MkSymbol("x_" + (i + 1) + "_" + (j + 1)), z3Context.IntSort);
             }
+        }
+
+        static BoolExpr GetGenericConstraints()
+        {
+           
+            
 
             // each cell contains a value in {1, ..., 9}
-            Expr[][] cells_c = new Expr[9][];
+            BoolExpr[][] cells_c = new BoolExpr[9][];
             for (uint i = 0; i < 9; i++)
             {
                 cells_c[i] = new BoolExpr[9];
                 for (uint j = 0; j < 9; j++)
-                    cells_c[i][j] = _ctx.MkAnd(_ctx.MkLe(_ctx.MkInt(1), X[i][j]),
-                        _ctx.MkLe(X[i][j], _ctx.MkInt(9)));
+                    cells_c[i][j] = z3Context.MkAnd(z3Context.MkLe(z3Context.MkInt(1), X[i][j]),
+                        z3Context.MkLe(X[i][j], z3Context.MkInt(9)));
             }
 
             // each row contains a digit at most once
             BoolExpr[] rows_c = new BoolExpr[9];
             for (uint i = 0; i < 9; i++)
-                rows_c[i] = _ctx.MkDistinct(X[i]);
+                rows_c[i] = z3Context.MkDistinct(X[i]);
 
 
             // each column contains a digit at most once
             BoolExpr[] cols_c = new BoolExpr[9];
             for (uint j = 0; j < 9; j++)
             {
-                IntExpr[] column = new IntExpr[9];
+                Expr[] column = new Expr[9];
                 for (uint i = 0; i < 9; i++)
                     column[i] = X[i][j];
 
-                cols_c[j] = _ctx.MkDistinct(column);
+                cols_c[j] = z3Context.MkDistinct(column);
             }
 
             // each 3x3 square contains a digit at most once
@@ -67,45 +117,178 @@ namespace sudoku.Z3
                 sq_c[i0] = new BoolExpr[3];
                 for (uint j0 = 0; j0 < 3; j0++)
                 {
-                    IntExpr[] square = new IntExpr[9];
+                    Expr[] square = new Expr[9];
                     for (uint i = 0; i < 3; i++)
                         for (uint j = 0; j < 3; j++)
                             square[3 * i + j] = X[3 * i0 + i][3 * j0 + j];
-                    sq_c[i0][j0] = _ctx.MkDistinct(square);
+                    sq_c[i0][j0] = z3Context.MkDistinct(square);
                 }
             }
 
-            sudoku_c = _ctx.MkTrue();
+            var toReturn = z3Context.MkTrue();
             foreach (BoolExpr[] t in cells_c)
-                sudoku_c = _ctx.MkAnd(_ctx.MkAnd(t), sudoku_c);
-            sudoku_c = _ctx.MkAnd(_ctx.MkAnd(rows_c), sudoku_c);
-            sudoku_c = _ctx.MkAnd(_ctx.MkAnd(cols_c), sudoku_c);
+                toReturn = z3Context.MkAnd(z3Context.MkAnd(t), toReturn);
+            toReturn = z3Context.MkAnd(z3Context.MkAnd(rows_c), toReturn);
+            toReturn = z3Context.MkAnd(z3Context.MkAnd(cols_c), toReturn);
             foreach (BoolExpr[] t in sq_c)
-                sudoku_c = _ctx.MkAnd(_ctx.MkAnd(t), sudoku_c);
+                toReturn = z3Context.MkAnd(z3Context.MkAnd(t), toReturn);
+            return toReturn;
         }
 
-        Sudoku.Core.Sudoku SudokuExample(Sudoku.Core.Sudoku instance)
-        {
-            BoolExpr instance_c = _ctx.MkTrue();
-            for (int i = 0; i < 9; i++)
-                for (int j = 0; j < 9; j++)
-                    instance_c = _ctx.MkAnd(instance_c,
-                        (BoolExpr)
-                        _ctx.MkITE(_ctx.MkEq(_ctx.MkInt(instance.GetCell(i,j)), _ctx.MkInt(0)),
-                            _ctx.MkTrue(),
-                            _ctx.MkEq(X[i][j], _ctx.MkInt(instance.GetCell(i, j)))));
+        protected Sudoku.Core.Sudoku SolveWithSubstitutions(Sudoku.Core.Sudoku instance)
+       {
 
-            Solver s = _ctx.MkSolver();
-            s.Assert(sudoku_c);
+            var substExprs = new List<Expr>();
+            var substVals = new List<Expr>();
+
+            for (int i = 0; i < 9; i++)
+            for (int j = 0; j < 9; j++)
+                if (instance.GetCell(i, j) != 0)
+                {
+                   substExprs.Add(X[i][j]);
+                   substVals.Add(z3Context.MkInt(instance.GetCell(i, j)));
+                }
+           BoolExpr instance_c = (BoolExpr)GenericContraints.Substitute(substExprs.ToArray(), substVals.ToArray());
+
+           var z3Solver = GetSolver();
+            z3Solver.Assert(instance_c);
+
+            if (z3Solver.Check() == Status.SATISFIABLE)
+            {
+                Model m = z3Solver.Model;
+                for (int i = 0; i < 9; i++)
+                    for (int j = 0; j < 9; j++){
+                        if (instance.GetCell(i, j) == 0)
+                        {
+                            instance.SetCell(i, j, ((IntNum) m.Evaluate(X[i][j])).Int);
+                        }
+                    }
+            }
+            else
+            {
+                Console.WriteLine("Failed to solve sudoku");
+            }
+            return instance;
+        }
+
+
+       protected Sudoku.Core.Sudoku SolveWithAsumptions(Sudoku.Core.Sudoku instance)
+       {
+
+           BoolExpr instance_c = GetPuzzleConstraint(instance);
+           var z3Solver = GetReusableSolver();
+            if (z3Solver.Check(instance_c) == Status.SATISFIABLE)
+           {
+               Model m = z3Solver.Model;
+               for (int i = 0; i < 9; i++)
+               for (int j = 0; j < 9; j++)
+               {
+                   if (instance.GetCell(i, j) == 0)
+                   {
+                       instance.SetCell(i, j, ((IntNum)m.Evaluate(X[i][j])).Int);
+                   }
+               }
+           }
+           else
+           {
+               Console.WriteLine("Failed to solve sudoku");
+           }
+           return instance;
+       }
+
+
+
+       protected Sudoku.Core.Sudoku SolveWithScope(Sudoku.Core.Sudoku instance)
+       {
+
+           
+           var z3Solver = GetReusableSolver();
+           z3Solver.Push();
+           BoolExpr instance_c = GetPuzzleConstraint(instance);
+            z3Solver.Assert(instance_c);
+
+           if (z3Solver.Check() == Status.SATISFIABLE)
+           {
+               Model m = z3Solver.Model;
+               for (int i = 0; i < 9; i++)
+               for (int j = 0; j < 9; j++)
+               {
+                   if (instance.GetCell(i, j) == 0)
+                   {
+                       instance.SetCell(i, j, ((IntNum)m.Evaluate(X[i][j])).Int);
+                   }
+               }
+           }
+           else
+           {
+               Console.WriteLine("Failed to solve sudoku");
+           }
+           z3Solver.Pop();
+           return instance;
+       }
+
+
+
+        protected Sudoku.Core.Sudoku SolveOriginalCleanup(Sudoku.Core.Sudoku instance)
+       {
+
+           BoolExpr instance_c = GetPuzzleConstraint(instance);
+           var z3Solver = GetSolver();
+           z3Solver.Assert(GenericContraints);
+           z3Solver.Assert(instance_c);
+
+           if (z3Solver.Check() == Status.SATISFIABLE)
+           {
+               Model m = z3Solver.Model;
+               for (int i = 0; i < 9; i++)
+               for (int j = 0; j < 9; j++)
+               {
+                   if (instance.GetCell(i, j) == 0)
+                   {
+                       instance.SetCell(i, j, ((IntNum)m.Evaluate(X[i][j])).Int);
+                   }
+               }
+           }
+           else
+           {
+               Console.WriteLine("Failed to solve sudoku");
+           }
+           return instance;
+       }
+
+        protected virtual Solver GetSolver()
+        {
+            return z3Context.MkSolver();
+        }
+
+        protected virtual Solver GetReusableSolver()
+        {
+            return ReusableZ3Solver;
+        }
+
+        protected Sudoku.Core.Sudoku SolveOriginalVersion(Sudoku.Core.Sudoku instance)
+        {
+            BoolExpr instance_c = z3Context.MkTrue();
+            for (int i = 0; i < 9; i++)
+            for (int j = 0; j < 9; j++)
+                instance_c = z3Context.MkAnd(instance_c,
+                    (BoolExpr)
+                    z3Context.MkITE(z3Context.MkEq(z3Context.MkInt(instance.GetCell(i, j)), z3Context.MkInt(0)),
+                        z3Context.MkTrue(),
+                        z3Context.MkEq(X[i][j], z3Context.MkInt(instance.GetCell(i, j)))));
+
+            Solver s = z3Context.MkSolver();
+            s.Assert(GenericContraints);
             s.Assert(instance_c);
 
             if (s.Check() == Status.SATISFIABLE)
             {
                 Model m = s.Model;
                 for (int i = 0; i < 9; i++)
-                    for (int j = 0; j < 9; j++){                
-                        instance.SetCell(i, j, ((IntNum)m.Evaluate(X[i][j])).Int);
-                    }
+                for (int j = 0; j < 9; j++)
+                {
+                    instance.SetCell(i, j, ((IntNum)m.Evaluate(X[i][j])).Int);
+                }
                 return instance;
 
 
@@ -116,12 +299,67 @@ namespace sudoku.Z3
                 return instance;
             }
         }
-     
 
-        public Sudoku.Core.Sudoku Solve(Sudoku.Core.Sudoku s)
+
+
+
+        public virtual Sudoku.Core.Sudoku Solve(Sudoku.Core.Sudoku s)
         {
-         //   Z3Solver z3 = new Z3Solver();
-            return SudokuExample(s);
+            return SolveWithSubstitutions(s);
         }
     }
+
+    //public class Z3SolverWithScope: Z3Solver
+    //{
+    //    public override Sudoku.Core.Sudoku Solve(Sudoku.Core.Sudoku s)
+    //    {
+    //        return SolveWithScope(s);
+    //    }
+    //}
+
+    //public class Z3SolverWithAsumptions : Z3Solver
+    //{
+    //    public override Sudoku.Core.Sudoku Solve(Sudoku.Core.Sudoku s)
+    //    {
+    //        return SolveWithAsumptions(s);
+    //    }
+    //}
+
+    //public class Z3SolverOriginalVersion : Z3Solver
+    //{
+    //    public override Sudoku.Core.Sudoku Solve(Sudoku.Core.Sudoku s)
+    //    {
+    //        return SolveOriginalVersion(s);
+    //    }
+    //}
+
+    //public class Z3SolverOriginalCleanup : Z3Solver
+    //{
+    //    public override Sudoku.Core.Sudoku Solve(Sudoku.Core.Sudoku s)
+    //    {
+    //        return SolveOriginalCleanup(s);
+    //    }
+    //}
+
+    //public class Z3SolverOriginalCleanupSpecial : Z3Solver
+    //{
+    //    protected override Solver GetSolver()
+    //    {
+    //        //return z3Context.MkSimpleSolver();
+    //        z3Context.MkTactic("smt");
+    //        return base.GetSolver();
+            
+    //    }
+
+    //    public override Sudoku.Core.Sudoku Solve(Sudoku.Core.Sudoku s)
+    //    {
+    //        return SolveOriginalCleanup(s);
+    //    }
+    //}
+
+
+
+
+
+
 }
