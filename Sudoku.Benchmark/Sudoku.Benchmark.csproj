@@ -20,5 +20,6 @@
     <ProjectReference Include="..\Sudoku.techniquesHumaines\Sudoku.TechniquesHumaines.csproj" />
     <ProjectReference Include="..\Sudoku.ORTools\Sudoku.ORTools.csproj"/>
     <ProjectReference Include="..\Sudoku.GeneticAlgorithmSolver\Sudoku.GeneticAlgorithmSolver.csproj" />
+	<ProjectReference Include="..\Sudoku.DancingSolver\Sudoku.DancingSolver.csproj" />
   </ItemGroup>
 </Project>
