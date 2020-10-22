@@ -11,7 +11,7 @@ using Numpy;
 
 namespace Sudoku.NeuralNetwork
 {
-    class Model
+    public class Model
     {
         public static BaseModel GenerateModel()
         {
@@ -46,7 +46,7 @@ namespace Sudoku.NeuralNetwork
             // Initialize dataset
             var (sPuzzles, sSols) = DataSetHelper.ParseCSV(datasetPath, numSudokus);
             var (_sPuzzzlesTrain, _sPuzzlesTest) = DataSetHelper.SplitDataSet(sPuzzles, testPercent);
-            var (_sSolsTrain, _sSolsTest) = DataSetHelper.SplitDataSet(sPuzzles, testPercent);
+            var (_sSolsTrain, _sSolsTest) = DataSetHelper.SplitDataSet(sSols, testPercent);
 
             // Preprocess data
             var sPuzzzlesTrain = DataSetHelper.PreprocessSudokus(_sPuzzzlesTrain);
