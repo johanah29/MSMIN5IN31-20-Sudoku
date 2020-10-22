@@ -76,6 +76,19 @@ namespace Sudoku.TechniquesHumaines
             get => board[x][y];
         }
 
+        public int[][] GetBoard()
+        {
+            return board.Select(row => row.Select(cell => cell.Value).ToArray()).ToArray();
+        }
+
+
+        public bool IsValid()
+        {
+            return board.All(row =>
+                row.All(cell => cell.Value!=0 && cell.GetCellsVisible().All(neighbour => neighbour.Value != cell.Value)));
+        }
+
+
         // Add/Remove the following candidates at the following locations
         public bool ChangeCandidates(IEnumerable<Cell> cells, IEnumerable<int> candidates, bool remove = true)
         {

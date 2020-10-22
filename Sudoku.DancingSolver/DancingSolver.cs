@@ -10,10 +10,40 @@ namespace Sudoku.DancingSolver
 {
     public class DancingSolver : ISudokuSolver
     {
-        public static void Main(String[] args)
+
+        private static Dlx _dlx = new Dlx();
+
+        public Core.Sudoku Solve(Core.Sudoku s)
         {
+            
+
+            var internalRows = BuildInternalRowsForSudoku(s);
+            var dlxRows = BuildDlxRows(internalRows);
+            var solutions = _dlx
+                .Solve(dlxRows, d => d, r => r)
+                //.Where(solution => VerifySolution(internalRows, solution))
+                .ToImmutableList();
+
+            //Console.WriteLine();
+
+            if (solutions.Any())
+            {
+                Console.WriteLine($"First solution (of {solutions.Count}):");
+                Console.WriteLine();
+
+
+                return SolutionToSudoku(internalRows, solutions.First());
+            }
+            else
+            {
+                Console.WriteLine("No solutions found!");
+
+            }
+
+            return null;
 
         }
+
 
         private static IEnumerable<int> Rows => Enumerable.Range(0, 9);
         private static IEnumerable<int> Cols => Enumerable.Range(0, 9);
@@ -23,12 +53,12 @@ namespace Sudoku.DancingSolver
             select Tuple.Create(row, col);
         private static IEnumerable<int> Digits => Enumerable.Range(1, 9);
 
-        private static IImmutableList<Tuple<int, int, int, bool>> BuildInternalRowsForGrid(Grid grid)
+        private static IImmutableList<Tuple<int, int, int, bool>> BuildInternalRowsForSudoku(Core.Sudoku s)
         {
             var rowsByCols =
                 from row in Rows
                 from col in Cols
-                let value = grid.ValueAt(row, col)
+                let value = s.GetCell(row, col)
                 select BuildInternalRowsForCell(row, col, value);
 
             return rowsByCols.SelectMany(cols => cols).ToImmutableList();
@@ -129,59 +159,21 @@ namespace Sudoku.DancingSolver
             return false;
         }
 
-        private static Grid SolutionToGrid(
+        private static Core.Sudoku SolutionToSudoku(
             IReadOnlyList<Tuple<int, int, int, bool>> internalRows,
             Solution solution)
         {
-            var rowStrings = solution.RowIndexes
+            var cellList = solution.RowIndexes
                 .Select(rowIndex => internalRows[rowIndex])
                 .OrderBy(t => t.Item1)
                 .ThenBy(t => t.Item2)
                 .GroupBy(t => t.Item1, t => t.Item3)
-                .Select(value => string.Concat(value))
-                .ToImmutableList();
-            return new Grid(rowStrings);
-        }
-
-        /*private static void DrawSolution(
-            IReadOnlyList<Tuple<int, int, int, bool>> internalRows,
-            Solution solution)
-        {
-            SolutionToGrid(internalRows, solution).Draw();
-        }*/
-
-        public Core.Sudoku Solve(Core.Sudoku s)
-        {
-            // http://puzzles.telegraph.co.uk/site/search_puzzle_number?id=27744
-            var grid = new Grid(ImmutableList.Create(s));
-
-
-            var internalRows = BuildInternalRowsForGrid(grid);
-            var dlxRows = BuildDlxRows(internalRows);
-            var solutions = new Dlx()
-                .Solve(dlxRows, d => d, r => r)
-                .Where(solution => VerifySolution(internalRows, solution))
-                .ToImmutableList();
-
-            Console.WriteLine();
-
-            if (solutions.Any())
-            {
-                Console.WriteLine($"First solution (of {solutions.Count}):");
-                Console.WriteLine();
+                .SelectMany(value => new List<int>(value)).ToList();
                 
-
-                /*DrawSolution(internalRows, solutions.First());
-                Console.WriteLine();*/
-            }
-            else
-            {
-                Console.WriteLine("No solutions found!");
-            }
-
-            return new Sudoku.Core.Sudoku(solutions.First());
-
-
+            return new Core.Sudoku(cellList);
         }
+
+       
+      
     }
 }

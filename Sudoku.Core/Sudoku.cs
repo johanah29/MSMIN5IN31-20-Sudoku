@@ -8,21 +8,31 @@ using System.Text;
 
 namespace Sudoku.Core
 {
+    /// <summary>
+    /// Class that represents a Sudoku, fully or partially completed
+    /// Holds a list of 81 int for cells, with 0 for empty cells
+    /// Can parse strings and files from most common formats and displays the sudoku in an easy to read format
+    /// </summary>
     public class Sudoku:ICloneable
     {
 
 
-        private static readonly int[] Indices = Enumerable.Range(0, 9).ToArray();
+        public static readonly int[] Indices = Enumerable.Range(0, 9).ToArray();
 
 
-        public Sudoku(int[] grid)
+
+        /// <summary>
+        /// constructor that initializes the board with 81 cells
+        /// </summary>
+        /// <param name="cells"></param>
+        public Sudoku(IEnumerable<int> cells)
         {
-
-        }
-
-        public Sudoku(List<int> lsol)
-        {
-            this.Cells = lsol;
+            var enumerable = cells.ToList();
+            if (enumerable.Count != 81)
+            {
+                throw new ArgumentException("Sudoku should have exactly 81 cells", nameof(cells));
+            }
+            Cells = new List<int>(enumerable);
         }
 
         public Sudoku()
@@ -34,11 +44,23 @@ namespace Sudoku.Core
         // The List property makes it easier to manipulate cells,
         public List<int> Cells { get; set; } = Enumerable.Repeat(0, 81).ToList();
 
+        /// <summary>
+        /// Easy access by row and column number
+        /// </summary>
+        /// <param name="x">row number (between 0 and 8)</param>
+        /// <param name="y">column number (between 0 and 8)</param>
+        /// <returns>value of the cell</returns>
         public int GetCell(int x, int y)
         {
             return Cells[(9 * x) + y];
         }
 
+        /// <summary>
+        /// Easy setter by row and column number
+        /// </summary>
+        /// <param name="x">row number (between 0 and 8)</param>
+        /// <param name="y">column number (between 0 and 8)</param>
+        /// <param name="value">value of the cell to set</param>
         public void SetCell(int x, int y, int value)
         {
             Cells[(9 * x) + y] = value;
@@ -93,6 +115,27 @@ namespace Sudoku.Core
                 output.AppendLine();
             }
 
+            return output.ToString();
+        }
+
+        /// <summary>
+        /// Displays a Sudoku in an easy-to-read format
+        /// </summary>
+        /// <returns></returns>
+        public string ToStringGenetic()
+        {
+            var output = new StringBuilder();
+
+            for (int row = 1; row <= 9; row++)
+            {
+                for (int column = 1; column <= 9; column++)
+                {
+
+                    var value = Cells[(row - 1) * 9 + (column - 1)];
+
+                    output.Append(value);
+                }
+            }
             return output.ToString();
         }
 
@@ -185,43 +228,49 @@ namespace Sudoku.Core
         {
             var toReturn = new List<Sudoku>();
             var cells = new List<int>(81);
-            foreach (var line in lines)
+            // we ignore lines not starting with a sudoku character
+            foreach (var line in lines.Where(l => l.Length > 0
+                                                 && IsSudokuChar(l[0])))
             {
-                if (line.Length > 0)
+                foreach (char c in line)
                 {
-                    if (char.IsDigit(line[0]) || line[0] == '.' || line[0] == 'X' || line[0] == '-')
+                    //we ignore lines not starting with cell chars
+                    if (IsSudokuChar(c))
                     {
-                        foreach (char c in line)
+                        if (char.IsDigit(c))
                         {
-                            int? cellToAdd = null;
-                            if (char.IsDigit(c))
-                            {
-                                var cell = (int)Char.GetNumericValue(c);
-                                cellToAdd = cell;
-                            }
-                            else
-                            {
-                                if (c == '.' || c == 'X' || c == '-')
-                                {
-                                    cellToAdd = 0;
-                                }
-                            }
-
-                            if (cellToAdd.HasValue)
-                            {
-                                cells.Add(cellToAdd.Value);
-                                if (cells.Count == 81)
-                                {
-                                    toReturn.Add(new Sudoku() { Cells = new List<int>(cells) });
-                                    cells.Clear();
-                                }
-                            }
+                            // if char is a digit, we add it to a cell
+                            cells.Add((int)Char.GetNumericValue(c));
+                        }
+                        else
+                        {
+                            // if char represents an empty cell, we add 0
+                            cells.Add(0);
                         }
                     }
+                    // when 81 cells are entered, we create a sudoku and start collecting cells again.
+                    if (cells.Count == 81)
+                    {
+                        toReturn.Add(new Sudoku() { Cells = new List<int>(cells) });
+                        // we empty the current cell collector to start building a new Sudoku
+                        cells.Clear();
+                    }
+
                 }
             }
 
             return toReturn;
+        }
+
+
+        /// <summary>
+        /// identifies characters to be parsed into sudoku cells
+        /// </summary>
+        /// <param name="c">a character to test</param>
+        /// <returns>true if the character is a cell's char</returns>
+        private static bool IsSudokuChar(char c)
+        {
+            return char.IsDigit(c) || c == '.' || c == 'X' || c == '-';
         }
 
         public object Clone()
@@ -284,10 +333,6 @@ namespace Sudoku.Core
         {
             return NbErrors(originalPuzzle) == 0;
         }
-
-
-
-
 
     }
 }

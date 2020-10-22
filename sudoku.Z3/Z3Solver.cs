@@ -5,14 +5,16 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Z3;
 using System.Security.Cryptography;
+using System.Globalization;
+using System.Diagnostics;
 
 namespace sudoku.Z3
 {
 
     public class Z3Solver : ISudokuSolver
     {
-
         Context _ctx = new Context();
+        
         // 9x9 matrix of integer variables
         IntExpr[][] X = new IntExpr[9][];
         private BoolExpr sudoku_c;
@@ -20,8 +22,6 @@ namespace sudoku.Z3
         {
             PrepareGenericConstraints();
         }
-
-
 
         private void PrepareGenericConstraints()
         {
@@ -47,6 +47,7 @@ namespace sudoku.Z3
             BoolExpr[] rows_c = new BoolExpr[9];
             for (uint i = 0; i < 9; i++)
                 rows_c[i] = _ctx.MkDistinct(X[i]);
+
 
             // each column contains a digit at most once
             BoolExpr[] cols_c = new BoolExpr[9];
@@ -83,35 +84,16 @@ namespace sudoku.Z3
                 sudoku_c = _ctx.MkAnd(_ctx.MkAnd(t), sudoku_c);
         }
 
-        
-         IntExpr[,] SudokuExample(int[,] instance)
+        Sudoku.Core.Sudoku SudokuExample(Sudoku.Core.Sudoku instance)
         {
-
-            // sudoku instance, we use '0' for empty cells
-            /* int[,] instance = {{0,0,0,0,9,4,0,3,0},
-                               {0,0,0,5,1,0,0,0,7},
-                               {0,8,9,0,0,0,0,4,0},
-                               {0,0,0,0,0,0,2,0,8},
-                               {0,6,0,2,0,1,0,5,0},
-                               {1,0,2,0,0,0,0,0,0},
-                               {0,7,0,0,0,0,5,2,0},
-                               {9,0,0,0,6,5,0,0,0},
-                               {0,4,0,9,7,0,0,0,0}};
-            */
-
-            // Console.WriteLine("SudokuExample");
-
-  
-
-
             BoolExpr instance_c = _ctx.MkTrue();
-            for (uint i = 0; i < 9; i++)
-                for (uint j = 0; j < 9; j++)
+            for (int i = 0; i < 9; i++)
+                for (int j = 0; j < 9; j++)
                     instance_c = _ctx.MkAnd(instance_c,
                         (BoolExpr)
-                        _ctx.MkITE(_ctx.MkEq(_ctx.MkInt(instance[i, j]), _ctx.MkInt(0)),
+                        _ctx.MkITE(_ctx.MkEq(_ctx.MkInt(instance.GetCell(i,j)), _ctx.MkInt(0)),
                             _ctx.MkTrue(),
-                            _ctx.MkEq(X[i][j], _ctx.MkInt(instance[i, j]))));
+                            _ctx.MkEq(X[i][j], _ctx.MkInt(instance.GetCell(i, j)))));
 
             Solver s = _ctx.MkSolver();
             s.Assert(sudoku_c);
@@ -120,56 +102,26 @@ namespace sudoku.Z3
             if (s.Check() == Status.SATISFIABLE)
             {
                 Model m = s.Model;
-                IntExpr[,] R = new IntExpr[9, 9];
-                for (uint i = 0; i < 9; i++)
-                    for (uint j = 0; j < 9; j++)
-                        R[i, j] = (IntExpr) m.Evaluate(X[i][j]);
-                // Console.WriteLine("Sudoku solution:");
-                /*  for (uint i = 0; i < 9; i++)
-                  {
-                      for (uint j = 0; j < 9; j++)
-                          Console.Write(" " + R[i, j]);
-                      Console.WriteLine();
-                  }
-                */
-
-                return R;
+                for (int i = 0; i < 9; i++)
+                    for (int j = 0; j < 9; j++){                
+                        instance.SetCell(i, j, ((IntNum)m.Evaluate(X[i][j])).Int);
+                    }
+                return instance;
 
 
             }
             else
             {
                 Console.WriteLine("Failed to solve sudoku");
-                //  throw new Exception();
-                return new IntExpr[9, 9];
+                return instance;
             }
         }
+     
 
         public Sudoku.Core.Sudoku Solve(Sudoku.Core.Sudoku s)
         {
-
-            int[,] instance = new int[9, 9];
-
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    instance[i, j] = s.GetCell(i, j);
-                }
-            }
-
-            IntExpr[,] R = SudokuExample(instance);
-
-            var listCells = new List<int>(81);
-
-            for (int i = 0; i < 9; i++)
-            {
-                for (int j = 0; j < 9; j++)
-                {
-                    listCells.Add(((IntNum)R[i, j]).Int);
-                }
-            }
-            return new Sudoku.Core.Sudoku(listCells);
+         //   Z3Solver z3 = new Z3Solver();
+            return SudokuExample(s);
         }
     }
 }
