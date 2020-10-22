@@ -46,6 +46,7 @@ namespace Sudoku.Benchmark
                     .WithRuntime(CoreRuntime.Core31)
                     .WithLaunchCount(1)
                     .WithWarmupCount(1)
+                    .WithIterationCount(3)
                     .WithInvocationCount(2)
                     
                 );
@@ -94,7 +95,8 @@ namespace Sudoku.Benchmark
 
         public IEnumerable<SolverPresenter> GetSolvers()
         {
-            return Core.Sudoku.GetSolvers().Select(s=>new SolverPresenter() {Solver = s});
+            return Core.Sudoku.GetSolvers().Select(s => new SolverPresenter() { Solver = s });
+            //return Core.Sudoku.GetSolvers().Where(s=>s.GetType().Name.ToLowerInvariant().StartsWith("z3")).Select(s=>new SolverPresenter() {Solver = s});
         }
 
 
