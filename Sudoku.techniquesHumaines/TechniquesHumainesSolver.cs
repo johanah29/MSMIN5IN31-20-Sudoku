@@ -250,8 +250,16 @@ namespace Sudoku.techniquesHumaines
                         //targetCell.Set(0, true);
                     }
                     // D'autres valeurs sont possible pour la cellule courante, on les tente
-                    //On choisi la première valeur non déjà explorée, possibilité d'utiliser l'heuristique LCV
-                    var exploredValue = targetCell.Candidates.First(i => !currentlyExploredCellValues.ExploredValues.Contains(i));
+                    //utilisation de l'heuristique LCV
+                    var candidateValues = targetCell.Candidates.Where(i => !currentlyExploredCellValues.ExploredValues.Contains(i));
+                    var neighbourood = targetCell.GetCellsVisible();
+                    var valueConstraints = candidateValues.Select(v => new
+                    {
+                        Value = v,
+                        ContraintNb = neighbourood.Count(neighboor => neighboor.Candidates.Contains(v))
+                    }).ToList();
+                    var minContraints = valueConstraints.Min(vc => vc.ContraintNb);
+                    var exploredValue = valueConstraints.First(vc => vc.ContraintNb == minContraints).Value;
                     currentlyExploredCellValues.ExploredValues.Add(exploredValue);
                     targetCell.Set(exploredValue);
                 }
